@@ -260,8 +260,7 @@ function MusicPlayer({
   const startSec = React.useMemo(() => parseTimeToSeconds(startTime), [startTime]);
   const endSec = React.useMemo(() => parseTimeToSeconds(endTime), [endTime]);
 
-  // Coba autoplay saat mount; jika diblokir browser,
-  // daftarkan listener sekali-pakai pada interaksi pertama tamu (termasuk "Buka Undangan").
+  // Coba autoplay saat mount; jika diblokir browser, tunggu interaksi pertama tamu.
   React.useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -392,7 +391,6 @@ export default function UndanganClient({
   const guestIdParam = searchParams.get("tid") || searchParams.get("tamu_id");
   const guest = guestParam || initialGuest || "[Nama Tamu]";
 
-  // State navigasi 3 section terpisah
   const [section, setSection] = useState<1 | 2 | 3>(1);
 
   const goToSection = (nextStep: 1 | 2 | 3) => {
@@ -435,6 +433,17 @@ export default function UndanganClient({
   const musikJudul = (dj as Record<string, string>).musik_judul || "";
   const musikStart = (dj as Record<string, string>).musik_start || "";
   const musikEnd = (dj as Record<string, string>).musik_end || "";
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSection(2);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }, 2000);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const rekeningData = data?.rekening;
   const accountList = useMemo<Account[]>(() => {
@@ -705,19 +714,10 @@ export default function UndanganClient({
                 {guest}
               </div>
               <p className="small guest-note">Mohon Ma&apos;af bila salah dalam penulisan nama/gelar</p>
-              <button
-                type="button"
-                className="btn open-button"
-                onClick={() => goToSection(2)}
-              >
-                Buka Undangan
-              </button>
             </div>
           </div>
         </header>
       )}
-
-
 
       {/* ========================================================
           2. SECTION ACARA (Rundown, Lokasi, Do'a Restu & Orang Tua)
@@ -761,6 +761,7 @@ export default function UndanganClient({
               <div>
                 <p className="small place-date">{tempatSingkat}</p>
                 <p className="salam">Assalamu&apos;allaikum Wr.Wb.</p>
+                <p className="small">Kepada Yth. {guest}</p>
                 <p className="opening-copy">
                   Dengan memohon rahmat dan ridho Allah SWT. kami bermaksud menyelenggarakan syukuran
                   Khitanan anak kami, yang insya Allah akan dilaksanakan pada :
