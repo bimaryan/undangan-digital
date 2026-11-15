@@ -297,7 +297,7 @@ export default function AdminPage() {
         });
         if (data.musicRecovered) {
           setPesan({
-            text: "File musik sebelumnya ditemukan kembali. Klik Simpan Semua Perubahan agar tersambung permanen ke undangan.",
+            text: "File musik sebelumnya ditemukan kembali. Klik Simpan Perubahan agar tersambung permanen ke undangan.",
             tipe: "success",
           });
         }
@@ -364,7 +364,7 @@ export default function AdminPage() {
       const data = await res.json().catch(() => ({}));
       if (res.ok && editing) {
         setEditing({ ...editing, [field]: data.url });
-        setPesan({ text: "Foto berhasil diunggah. Klik Simpan Semua Perubahan agar tampil di undangan.", tipe: "success" });
+        setPesan({ text: "Foto berhasil diunggah. Klik Simpan Perubahan agar tampil di undangan.", tipe: "success" });
       } else {
         setPesan({ text: data.error || "Gagal mengunggah foto.", tipe: "error" });
       }
@@ -396,7 +396,7 @@ export default function AdminPage() {
           musik_judul: editing.musik_judul || defaultJudul,
           musik_disabled: false,
         });
-        setPesan({ text: "Musik berhasil diunggah. Klik Simpan Semua Perubahan agar aktif di undangan.", tipe: "success" });
+        setPesan({ text: "Musik berhasil diunggah. Klik Simpan Perubahan agar aktif di undangan.", tipe: "success" });
       } else {
         setPesan({ text: data.error || "Gagal mengunggah musik.", tipe: "error" });
       }
@@ -423,7 +423,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 text-slate-800 p-3 sm:p-4 lg:p-5 font-sans antialiased pb-24">
+    <main className="min-h-screen bg-stone-50 text-slate-800 p-3 sm:p-4 lg:p-5 font-sans antialiased">
       <div className="mx-auto grid max-w-[1440px] gap-4 lg:gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
         <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-xl border border-slate-200 bg-white p-4 text-slate-600 lg:flex">
           <a href="#identitas" className="mb-8 flex items-center gap-3 px-2">
@@ -1422,34 +1422,6 @@ export default function AdminPage() {
             </div>
           )}
         </section>
-
-        {/* ======================================================== */}
-        {/* STICKY BOTTOM SAVE BAR */}
-        {/* ======================================================== */}
-        <div className="fixed bottom-3 left-3 right-3 max-w-5xl mx-auto bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 z-30">
-          <div className="text-center sm:text-left">
-            <p className="text-sm font-bold text-slate-900 tracking-tight">Periksa kembali data sebelum menyimpan</p>
-            <p className="text-xs text-slate-500">Perubahan data langsung aktif pada seluruh halaman undangan publik.</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={loading}
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-2xl font-bold text-sm transition shadow-xs hover:shadow disabled:opacity-50 inline-flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Menyimpan Data...</span>
-              </>
-            ) : (
-              <>
-                <IconSave className="w-4 h-4" />
-                <span>Simpan Semua Perubahan</span>
-              </>
-            )}
-          </button>
-        </div>
 
         </div>
       </div>
