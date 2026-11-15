@@ -617,46 +617,43 @@ function KelolaContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,_#dbeafe,_transparent_30%),#f8fafc] text-slate-800 p-3 sm:p-5 lg:p-6 font-sans antialiased">
-      <div className="mx-auto grid max-w-[1440px] gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-slate-200/80 bg-slate-950 p-5 text-slate-300 shadow-xl shadow-slate-950/10 lg:flex">
+    <main className="min-h-screen bg-stone-50 text-slate-800 p-3 sm:p-4 lg:p-5 font-sans antialiased">
+      <div className="mx-auto grid max-w-[1440px] gap-4 lg:gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-xl border border-slate-200 bg-white p-4 text-slate-600 lg:flex">
           <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="mb-8 flex items-center gap-3 px-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-400 text-lg font-black text-slate-950 shadow-lg shadow-sky-400/20">I</span>
+            <span className="flex size-8 items-center justify-center rounded-md bg-slate-900 text-sm font-bold text-white">I</span>
             <span>
-              <strong className="block text-sm tracking-tight text-white">InovaInvite</strong>
-              <span className="text-[11px] font-medium text-slate-400">Panel tuan rumah</span>
+              <strong className="block text-sm text-slate-900">InovaInvite</strong>
+              <span className="text-[11px] text-slate-500">Panel tuan rumah</span>
             </span>
           </a>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="truncate text-sm font-bold text-white">{undangan.nama_anak}</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{undangan.nama_orang_tua}</p>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="truncate text-sm font-semibold text-slate-900">{undangan.nama_anak}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{undangan.nama_orang_tua}</p>
           </div>
 
-          <p className="mt-7 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Menu utama</p>
-          <nav className="mt-3 space-y-1 text-sm font-semibold">
-            <a href="#ringkasan" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white transition hover:bg-white/10"><IconSparkles className="w-4 h-4 text-sky-300" />Ringkasan</a>
-            <button type="button" onClick={() => setActiveTab("tamu")} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${activeTab === "tamu" ? "bg-white/10 text-white" : "hover:bg-white/10 hover:text-white"}`}><IconUsers className="w-4 h-4 text-sky-300" />Daftar tamu <span className="ml-auto rounded-full bg-sky-400/15 px-2 py-0.5 text-[10px] text-sky-200">{tamu.length}</span></button>
-            <button type="button" onClick={() => setActiveTab("rsvp")} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${activeTab === "rsvp" ? "bg-white/10 text-white" : "hover:bg-white/10 hover:text-white"}`}><IconMessageSquare className="w-4 h-4 text-purple-300" />Buku ucapan <span className="ml-auto rounded-full bg-purple-400/15 px-2 py-0.5 text-[10px] text-purple-200">{rsvpList.length}</span></button>
+          <p className="mt-7 px-3 text-[11px] font-semibold text-slate-400">MENU UTAMA</p>
+          <nav className="mt-3 space-y-1 text-sm">
+            <a href="#ringkasan" className="flex items-center gap-3 rounded-md px-3 py-2.5 font-medium transition hover:bg-slate-100 hover:text-slate-900"><IconSparkles className="w-4 h-4" />Ringkasan</a>
+            <button type="button" onClick={() => setActiveTab("tamu")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition ${activeTab === "tamu" ? "bg-slate-100 font-semibold text-slate-900" : "font-medium hover:bg-slate-100 hover:text-slate-900"}`}><IconUsers className="w-4 h-4" />Daftar tamu <span className="ml-auto text-[11px] tabular-nums text-slate-400">{tamu.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("rsvp")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition ${activeTab === "rsvp" ? "bg-slate-100 font-semibold text-slate-900" : "font-medium hover:bg-slate-100 hover:text-slate-900"}`}><IconMessageSquare className="w-4 h-4" />Buku ucapan <span className="ml-auto text-[11px] tabular-nums text-slate-400">{rsvpList.length}</span></button>
           </nav>
 
-          <div className="mt-auto space-y-2">
-            <button type="button" onClick={muat} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-200 transition hover:bg-white/10"><IconRefresh className="w-4 h-4" />Segarkan data</button>
-            <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-400 px-3 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-sky-300"><IconExternalLink className="w-4 h-4" />Lihat undangan</a>
+          <div className="mt-auto space-y-2 border-t border-slate-200 pt-4">
+            <button type="button" onClick={muat} className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-3 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"><IconRefresh className="w-4 h-4" />Segarkan data</button>
+            <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-700"><IconExternalLink className="w-4 h-4" />Lihat undangan</a>
           </div>
         </aside>
 
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-4">
 
         {/* 1. HEADER UTAMA (ELEGANT GLASS CARD) */}
-        <div className="sticky top-3 z-30 rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-lg shadow-slate-900/5 backdrop-blur-xl md:p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="sticky top-3 z-30 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase bg-sky-50 text-sky-700 border border-sky-200/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                  Panel Tuan Rumah
-                </span>
+                <span className="text-xs font-semibold text-slate-500">PANEL TUAN RUMAH</span>
                 <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-mono bg-slate-100/80 px-2.5 py-0.5 rounded-lg border border-slate-200/60">
                   <span className="text-slate-400">Token:</span>
                   <strong className="text-slate-700 font-semibold">{token || "bumarpuah"}</strong>
@@ -697,7 +694,7 @@ function KelolaContent() {
         {/* 2. STATISTIK KARTU RINGKASAN (MODERN METRIC TILES) */}
         <div id="ringkasan" className="scroll-mt-32 grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Total Tamu */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition">
+          <div className="bg-white p-4 rounded-lg border border-slate-200/80 shadow-xs hover:border-slate-300 transition">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Tamu</span>
               <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
@@ -709,7 +706,7 @@ function KelolaContent() {
           </div>
 
           {/* Terkirim WA */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-sky-300 transition">
+          <div className="bg-white p-4 rounded-lg border border-slate-200/80 shadow-xs hover:border-sky-300 transition">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-sky-700">Terkirim WA</span>
               <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
@@ -721,7 +718,7 @@ function KelolaContent() {
           </div>
 
           {/* Konfirmasi Hadir */}
-          <div className="bg-white p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/20 shadow-xs hover:border-emerald-300 transition">
+          <div className="bg-white p-4 rounded-lg border border-emerald-200/80 bg-emerald-50/20 shadow-xs hover:border-emerald-300 transition">
             <div className="flex items-center justify-between text-emerald-600 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Konfirmasi Hadir</span>
               <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
@@ -733,7 +730,7 @@ function KelolaContent() {
           </div>
 
           {/* Berhalangan */}
-          <div className="bg-white p-5 rounded-2xl border border-rose-200/80 bg-rose-50/20 shadow-xs hover:border-rose-300 transition">
+          <div className="bg-white p-4 rounded-lg border border-rose-200/80 bg-rose-50/20 shadow-xs hover:border-rose-300 transition">
             <div className="flex items-center justify-between text-rose-600 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-rose-800">Berhalangan</span>
               <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
@@ -794,10 +791,10 @@ function KelolaContent() {
 
         {/* 4. KONTEN TAB: KELOLA TAMU */}
         {activeTab === "tamu" && (
-          <div id="daftar-tamu" className="scroll-mt-32 space-y-6">
+          <div id="daftar-tamu" className="scroll-mt-32 space-y-4">
 
             {/* FORM TAMBAH TAMU */}
-            <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80">
+            <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
                 <div>
                   <h2 className="font-bold text-slate-900 text-lg tracking-tight flex items-center gap-2">
@@ -911,7 +908,7 @@ function KelolaContent() {
             </div>
 
             {/* DAFTAR TAMU & FILTER */}
-            <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+            <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                   <h2 className="font-bold text-slate-900 text-lg tracking-tight">
@@ -1001,7 +998,7 @@ function KelolaContent() {
 
               {/* LIST KARTU TAMU */}
               {filteredTamu.length === 0 ? (
-                <div className="text-center py-16 bg-slate-50/60 rounded-3xl border border-dashed border-slate-200">
+                <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                   <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                     <IconUsers className="w-6 h-6" />
                   </div>
@@ -1093,7 +1090,7 @@ function KelolaContent() {
 
                             {/* KOTAK UCAPAN & DO'A TAMU */}
                             {t.ucapan && (
-                              <div className="mt-3 bg-gradient-to-r from-amber-50/70 via-orange-50/40 to-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 text-slate-800 shadow-2xs">
+                              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3.5 text-slate-800">
                                 <div className="flex items-center justify-between gap-2 mb-1.5">
                                   <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1.5 uppercase tracking-wide">
                                     <IconMessageSquare className="w-3.5 h-3.5 text-amber-600" />
@@ -1233,7 +1230,7 @@ function KelolaContent() {
             </div>
 
             {/* TIPS ELEGANT CALLOUT BOX */}
-            <div className="bg-gradient-to-r from-sky-50/70 via-indigo-50/40 to-sky-50/70 border border-sky-200/80 p-6 rounded-3xl">
+            <div className="bg-slate-50 border border-slate-200 p-4 sm:p-5 rounded-xl">
               <h3 className="font-bold text-sky-950 text-sm mb-2 flex items-center gap-2">
                 <IconSparkles className="w-4 h-4 text-sky-600" />
                 <span>Panduan Membagikan Undangan Digital</span>
@@ -1255,7 +1252,7 @@ function KelolaContent() {
 
         {/* 5. KONTEN TAB: SEMUA DO'A & BUKU TAMU */}
         {activeTab === "rsvp" && (
-          <div id="buku-ucapan" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+          <div id="buku-ucapan" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h2 className="font-bold text-slate-900 text-lg tracking-tight">
@@ -1276,7 +1273,7 @@ function KelolaContent() {
             </div>
 
             {rsvpList.length === 0 ? (
-              <div className="text-center py-16 bg-slate-50/60 rounded-3xl border border-dashed border-slate-200">
+              <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                 <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                   <IconMessageSquare className="w-6 h-6" />
                 </div>

@@ -423,47 +423,43 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e0f2fe,_transparent_32%),#f8fafc] text-slate-800 p-3 sm:p-5 lg:p-6 font-sans antialiased pb-28">
-      <div className="mx-auto grid max-w-[1440px] gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-slate-200/80 bg-slate-950 p-5 text-slate-300 shadow-xl shadow-slate-950/10 lg:flex">
+    <main className="min-h-screen bg-stone-50 text-slate-800 p-3 sm:p-4 lg:p-5 font-sans antialiased pb-24">
+      <div className="mx-auto grid max-w-[1440px] gap-4 lg:gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-xl border border-slate-200 bg-white p-4 text-slate-600 lg:flex">
           <a href="#identitas" className="mb-8 flex items-center gap-3 px-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-400 text-lg font-black text-slate-950 shadow-lg shadow-sky-400/20">I</span>
+            <span className="flex size-8 items-center justify-center rounded-md bg-slate-900 text-sm font-bold text-white">I</span>
             <span>
-              <strong className="block text-sm tracking-tight text-white">InovaInvite</strong>
-              <span className="text-[11px] font-medium text-slate-400">Admin workspace</span>
+              <strong className="block text-sm text-slate-900">InovaInvite</strong>
+              <span className="text-[11px] text-slate-500">Pengelolaan undangan</span>
             </span>
           </a>
 
-          <p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Pengaturan undangan</p>
-          <nav className="mt-3 space-y-1 text-sm font-semibold">
-            <a href="#identitas" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white transition hover:bg-white/10"><IconKey className="w-4 h-4 text-sky-300" />Identitas &amp; akses</a>
-            <a href="#media" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconImage className="w-4 h-4 text-indigo-300" />Foto undangan</a>
-            <a href="#acara" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconCalendar className="w-4 h-4 text-amber-300" />Waktu &amp; lokasi</a>
-            <a href="#keluarga" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconUsers className="w-4 h-4 text-emerald-300" />Keluarga</a>
-            <a href="#amplop" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconCreditCard className="w-4 h-4 text-rose-300" />Amplop digital</a>
-            <a href="#musik" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconMusic className="w-4 h-4 text-purple-300" />Musik latar</a>
+          <p className="px-3 text-[11px] font-semibold text-slate-400">PENGATURAN</p>
+          <nav className="mt-3 space-y-1 text-sm">
+            <a href="#identitas" className="flex items-center gap-3 rounded-md bg-slate-100 px-3 py-2.5 font-semibold text-slate-900"><IconKey className="w-4 h-4" />Identitas &amp; akses</a>
+            <a href="#media" className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-slate-100 hover:text-slate-900"><IconImage className="w-4 h-4" />Foto undangan</a>
+            <a href="#acara" className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-slate-100 hover:text-slate-900"><IconCalendar className="w-4 h-4" />Waktu &amp; lokasi</a>
+            <a href="#keluarga" className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-slate-100 hover:text-slate-900"><IconUsers className="w-4 h-4" />Keluarga</a>
+            <a href="#amplop" className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-slate-100 hover:text-slate-900"><IconCreditCard className="w-4 h-4" />Amplop digital</a>
+            <a href="#musik" className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-slate-100 hover:text-slate-900"><IconMusic className="w-4 h-4" />Musik latar</a>
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs font-bold text-white">Butuh daftar tamu?</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Kelola link personal, RSVP, dan ucapan dari satu tempat.</p>
-            <button type="button" onClick={() => router.push(`/admin/u/${activeSlug}?${editing?.akses_token || token}`)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-xs font-bold text-slate-900 transition hover:bg-sky-100">
+          <div className="mt-auto border-t border-slate-200 pt-4">
+            <p className="px-1 text-[11px] text-slate-500">Kelola daftar penerima dan RSVP.</p>
+            <button type="button" onClick={() => router.push(`/admin/u/${activeSlug}?${editing?.akses_token || token}`)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-700">
               <IconUsers className="w-4 h-4" />Kelola tamu
             </button>
           </div>
         </aside>
 
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-4">
 
         {/* 1. TOP HEADER BAR (EXECUTIVE DASHBOARD NAVBAR) */}
-        <div className="sticky top-3 z-30 rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-lg shadow-slate-900/5 backdrop-blur-xl md:p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+        <div className="sticky top-3 z-30 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase bg-sky-50 text-sky-700 border border-sky-200/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                  Admin Pusat
-                </span>
+                <span className="text-xs font-semibold text-slate-500">PENGATURAN UNDANGAN</span>
                 <span className="text-xs text-slate-400 font-mono">
                   Slug: <strong className="text-slate-700">{editing.slug}</strong>
                 </span>
@@ -545,7 +541,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 1: AKSES MANDIRI TUAN RUMAH & SAMPUL */}
         {/* ======================================================== */}
-        <section id="identitas" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="identitas" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
               <IconKey className="w-5 h-5" />
@@ -561,7 +557,7 @@ export default function AdminPage() {
           </div>
 
           {/* KOTAK AKSES TUAN RUMAH (ELEGANT CALLOUT) */}
-          <div className="bg-gradient-to-r from-sky-50/80 via-indigo-50/50 to-sky-50/80 border border-sky-200/90 p-5 rounded-2xl space-y-3">
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-sky-950 uppercase tracking-wide">
@@ -721,7 +717,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 2: FOTO DOKUMENTASI */}
         {/* ======================================================== */}
-        <section id="media" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="media" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
               <IconImage className="w-5 h-5" />
@@ -736,9 +732,9 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Foto Cover */}
-            <div className="border border-slate-200/90 p-5 rounded-2xl bg-slate-50/30 flex flex-col justify-between space-y-4">
+            <div className="border border-slate-200/90 p-4 rounded-lg bg-slate-50/30 flex flex-col justify-between space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
                   Foto Cover (Halaman Depan)
@@ -767,7 +763,7 @@ export default function AdminPage() {
                   className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer w-full"
                 />
                 {uploading === "cover" && (
-                  <p className="text-xs text-sky-600 font-semibold animate-pulse">Mengunggah foto cover...</p>
+                  <p className="text-xs text-sky-700 font-semibold">Mengunggah foto cover...</p>
                 )}
                 <input
                   value={editing.foto_cover || ""}
@@ -779,7 +775,7 @@ export default function AdminPage() {
             </div>
 
             {/* Foto Acara */}
-            <div className="border border-slate-200/90 p-5 rounded-2xl bg-slate-50/30 flex flex-col justify-between space-y-4">
+            <div className="border border-slate-200/90 p-4 rounded-lg bg-slate-50/30 flex flex-col justify-between space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
                   Foto Profil Acara (Foto Bulat)
@@ -810,7 +806,7 @@ export default function AdminPage() {
                   className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer w-full"
                 />
                 {uploading === "acara" && (
-                  <p className="text-xs text-sky-600 font-semibold animate-pulse">Mengunggah foto acara...</p>
+                  <p className="text-xs text-sky-700 font-semibold">Mengunggah foto acara...</p>
                 )}
                 <input
                   value={editing.foto_acara || ""}
@@ -826,7 +822,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 3: WAKTU, JADWAL & LOKASI */}
         {/* ======================================================== */}
-        <section id="acara" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="acara" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
               <IconCalendar className="w-5 h-5" />
@@ -956,7 +952,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 4: KAMI YANG BERBAHAGIA & TURUT MENGUNDANG */}
         {/* ======================================================== */}
-        <section id="keluarga" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="keluarga" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
@@ -1123,7 +1119,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 5: REKENING & E-WALLET (AMPLOP DIGITAL) */}
         {/* ======================================================== */}
-        <section id="amplop" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="amplop" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
@@ -1256,7 +1252,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 6: MUSIK LATAR & PEMOTONG DURASI */}
         {/* ======================================================== */}
-        <section id="musik" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="musik" className="scroll-mt-32 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
               <IconMusic className="w-5 h-5" />
@@ -1272,7 +1268,7 @@ export default function AdminPage() {
           </div>
 
           {/* Upload File Musik */}
-          <div className="border border-slate-200/90 p-5 rounded-2xl bg-slate-50/40 space-y-3">
+          <div className="border border-slate-200/90 p-4 rounded-lg bg-slate-50/40 space-y-3">
             <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
               Upload File Musik (MP3, M4A, OGG, AAC - Maks. 20 MB)
             </label>
@@ -1284,7 +1280,7 @@ export default function AdminPage() {
               className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer w-full"
             />
             {uploading === "musik" && (
-              <p className="text-xs text-purple-600 font-semibold animate-pulse">Mengunggah audio... mohon tunggu.</p>
+              <p className="text-xs text-slate-700 font-semibold">Mengunggah audio... mohon tunggu.</p>
             )}
           </div>
 
@@ -1314,7 +1310,7 @@ export default function AdminPage() {
           </div>
 
           {/* KOTAK POTONG DURASI MUSIK (TRIM & LOOP) */}
-          <div className="bg-gradient-to-r from-purple-50/80 via-fuchsia-50/40 to-purple-50/80 border border-purple-200/90 rounded-2xl p-5 space-y-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
             <div>
               <h3 className="text-sm font-bold text-purple-950 flex items-center gap-2">
                 <IconScissors className="w-4 h-4 text-purple-600" />
@@ -1430,7 +1426,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* STICKY BOTTOM SAVE BAR */}
         {/* ======================================================== */}
-        <div className="fixed bottom-4 left-4 right-4 max-w-5xl mx-auto bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-3xl shadow-xl border border-slate-200/90 flex flex-col sm:flex-row justify-between items-center gap-3 z-30">
+        <div className="fixed bottom-3 left-3 right-3 max-w-5xl mx-auto bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 z-30">
           <div className="text-center sm:text-left">
             <p className="text-sm font-bold text-slate-900 tracking-tight">Periksa kembali data sebelum menyimpan</p>
             <p className="text-xs text-slate-500">Perubahan data langsung aktif pada seluruh halaman undangan publik.</p>
