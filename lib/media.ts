@@ -9,6 +9,11 @@ export type UploadedMedia = {
   content: Buffer;
 };
 
+export type UploadedMediaReference = Pick<
+  UploadedMedia,
+  "id" | "filename" | "content_type" | "size"
+>;
+
 let tableReady: Promise<void> | undefined;
 
 /** Media must survive a server restart or deployment. */
@@ -52,6 +57,21 @@ export async function getUploadedMedia(id: string) {
      FROM uploaded_media
      WHERE id = $1`,
     [id]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getLatestUploadedAudioForUndangan(
+  undanganId: number
+): Promise<UploadedMediaReference | null> {
+  await ensureMediaTable();
+  const result = await pool.query<UploadedMediaReference>(
+    `SELECT id, filename, content_type, size
+     FROM uploaded_media
+     WHERE undangan_id = $1 AND content_type LIKE 'audio/%'
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [undanganId]
   );
   return result.rows[0] ?? null;
 }

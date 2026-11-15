@@ -13,6 +13,7 @@ import {
   hapusRsvp,
   updateUndanganLengkap,
 } from "@/lib/undangan";
+import { getLatestUploadedAudioForUndangan } from "@/lib/media";
 
 function extractToken(req: NextRequest): string {
   // 1. Cek parameter ?token=xxx
@@ -87,12 +88,32 @@ export async function GET(
     }
 
     const undangan = auth.data;
+    const dataJson =
+      typeof undangan.data_json === "object" && undangan.data_json !== null
+        ? undangan.data_json
+        : {};
+    let musicRecovered = false;
+
+    // Versi lama sempat menyimpan file audio, tetapi URL-nya tertimpa oleh
+    // data_json lama saat tombol Simpan ditekan. Temukan file terakhir untuk
+    // undangan ini agar admin dapat menyimpan ulang tautannya tanpa upload lagi.
+    if (!dataJson.musik_url && !dataJson.musik_disabled) {
+      const latestAudio = await getLatestUploadedAudioForUndangan(undangan.id);
+      if (latestAudio) {
+        undangan.data_json = {
+          ...dataJson,
+          musik_url: `/api/media/${latestAudio.id}`,
+          musik_judul: dataJson.musik_judul || latestAudio.filename.replace(/\.[^.]+$/, ""),
+        };
+        musicRecovered = true;
+      }
+    }
     const [tamu, rsvp] = await Promise.all([
       getTamuByUndangan(undangan.id),
       getRsvpByUndangan(undangan.id),
     ]);
 
-    return NextResponse.json({ undangan, tamu, rsvp });
+    return NextResponse.json({ undangan, tamu, rsvp, musicRecovered });
   } catch (err: unknown) {
     console.error("API GET admin error:", err);
     const msg = err instanceof Error ? err.message : String(err);

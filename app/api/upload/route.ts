@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { saveUploadedMedia } from "@/lib/media";
-import { getUndanganBySlug, getUndanganByToken } from "@/lib/undangan";
+import { attachUploadedMedia, getUndanganBySlug, getUndanganByToken } from "@/lib/undangan";
 
 const FILE_TYPES = {
   jpg: { mime: "image/jpeg", category: "image", maxMb: 10 },
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     const rawFile = formData.get("file");
     const slug = String(formData.get("slug") ?? "").trim();
     const token = String(formData.get("token") ?? "").trim();
+    const field = String(formData.get("field") ?? "").trim();
 
     if (!(rawFile instanceof File)) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
@@ -63,6 +64,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File yang dipilih kosong." }, { status: 400 });
     }
 
+    const validField =
+      (fileType.category === "image" && (field === "foto_cover" || field === "foto_acara")) ||
+      (fileType.category === "audio" && field === "musik");
+    if (!validField) {
+      return NextResponse.json({ error: "Tujuan file upload tidak valid." }, { status: 400 });
+    }
+
     const maxBytes = fileType.maxMb * 1024 * 1024;
     if (rawFile.size > maxBytes) {
       return NextResponse.json(
@@ -81,8 +89,11 @@ export async function POST(req: NextRequest) {
       content: Buffer.from(await rawFile.arrayBuffer()),
     });
 
+    const url = `/api/media/${id}`;
+    await attachUploadedMedia(invitation.id, field as "foto_cover" | "foto_acara" | "musik", url);
+
     return NextResponse.json({
-      url: `/api/media/${id}`,
+      url,
       type: fileType.category,
       filename: rawFile.name,
     });

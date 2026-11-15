@@ -32,8 +32,54 @@ export async function createUndangan(data: {
   return res.rows[0];
 }
 
+export async function attachUploadedMedia(
+  undanganId: number,
+  field: "foto_cover" | "foto_acara" | "musik",
+  url: string
+) {
+  if (field === "foto_cover") {
+    await pool.query(
+      "UPDATE undangan SET foto_cover = $1 WHERE id = $2",
+      [url, undanganId]
+    );
+    return;
+  }
+
+  if (field === "foto_acara") {
+    await pool.query(
+      "UPDATE undangan SET foto_acara = $1 WHERE id = $2",
+      [url, undanganId]
+    );
+    return;
+  }
+
+  // Musik disimpan di JSON karena metadata lagu (judul dan titik loop) juga
+  // berada di sana. URL disimpan segera setelah upload agar tetap ada walau
+  // admin me-refresh sebelum menekan tombol Simpan keseluruhan formulir.
+  await pool.query(
+    `UPDATE undangan
+     SET data_json = jsonb_set(
+       jsonb_set(COALESCE(data_json, '{}'::jsonb), '{musik_url}', to_jsonb($1::text), true),
+       '{musik_disabled}',
+       'false'::jsonb,
+       true
+     )
+     WHERE id = $2`,
+    [url, undanganId]
+  );
+}
+
 export async function updateUndanganLengkap(id: number, body: Record<string, unknown>) {
+  // `data_json` ikut ada di payload admin sebagai nilai lama dari database.
+  // Terapkan lebih dulu agar nilai form terbaru di bawahnya (termasuk URL musik
+  // hasil upload) tidak tertimpa lagi saat disimpan.
+  const previousDataJson =
+    typeof body.data_json === "object" && body.data_json !== null
+      ? (body.data_json as Record<string, unknown>)
+      : {};
+
   const dataJson = {
+    ...previousDataJson,
     judul_sampul: body.judul_sampul || "UNDANGAN",
     tanggal_sampul: body.tanggal_sampul || "Rabu, 18 November 2026",
     label_acara: body.label_acara || "Khitanan :",
@@ -48,7 +94,9 @@ export async function updateUndanganLengkap(id: number, body: Record<string, unk
     musik_judul: body.musik_judul || "",
     musik_start: body.musik_start || "",
     musik_end: body.musik_end || "",
-    ...(typeof body.data_json === "object" && body.data_json !== null ? (body.data_json as Record<string, unknown>) : {}),
+    // Menyimpan pilihan hapus secara eksplisit agar berkas audio lama tidak
+    // otomatis dimunculkan lagi oleh mekanisme pemulihan di panel admin.
+    musik_disabled: body.musik_disabled === true,
   };
 
   const res = await pool.query(

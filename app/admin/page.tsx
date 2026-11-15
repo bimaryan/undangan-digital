@@ -41,6 +41,7 @@ type Undangan = {
   musik_judul?: string;
   musik_start?: string;
   musik_end?: string;
+  musik_disabled?: boolean;
 };
 
 // ==========================================
@@ -291,8 +292,15 @@ export default function AdminPage() {
           musik_judul: dj.musik_judul || "",
           musik_start: dj.musik_start || "",
           musik_end: dj.musik_end || "",
+          musik_disabled: dj.musik_disabled === true,
           akses_token: u.akses_token || "bumarpuah",
         });
+        if (data.musicRecovered) {
+          setPesan({
+            text: "File musik sebelumnya ditemukan kembali. Klik Simpan Semua Perubahan agar tersambung permanen ke undangan.",
+            tipe: "success",
+          });
+        }
       } catch (err) {
         setPesan({ text: "Terjadi kesalahan saat memuat data: " + String(err), tipe: "error" });
       }
@@ -349,6 +357,7 @@ export default function AdminPage() {
     formData.append("file", file);
     formData.append("slug", activeSlug);
     formData.append("token", token);
+    formData.append("field", field);
 
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -375,6 +384,7 @@ export default function AdminPage() {
     formData.append("file", file);
     formData.append("slug", activeSlug);
     formData.append("token", token);
+    formData.append("field", "musik");
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json().catch(() => ({}));
@@ -384,6 +394,7 @@ export default function AdminPage() {
           ...editing,
           musik_url: data.url,
           musik_judul: editing.musik_judul || defaultJudul,
+          musik_disabled: false,
         });
         setPesan({ text: "Musik berhasil diunggah. Klik Simpan Semua Perubahan agar aktif di undangan.", tipe: "success" });
       } else {
@@ -1363,7 +1374,7 @@ export default function AdminPage() {
               <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => setEditing({ ...editing, musik_url: "", musik_judul: "", musik_start: "", musik_end: "" })}
+                  onClick={() => setEditing({ ...editing, musik_url: "", musik_judul: "", musik_start: "", musik_end: "", musik_disabled: true })}
                   className="text-xs text-rose-600 hover:text-rose-800 font-semibold inline-flex items-center gap-1"
                 >
                   <IconTrash className="w-3.5 h-3.5" />
