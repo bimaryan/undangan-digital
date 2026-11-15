@@ -617,11 +617,39 @@ function KelolaContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-slate-800 p-4 sm:p-6 lg:p-8 font-sans antialiased">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,_#dbeafe,_transparent_30%),#f8fafc] text-slate-800 p-3 sm:p-5 lg:p-6 font-sans antialiased">
+      <div className="mx-auto grid max-w-[1440px] gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-slate-200/80 bg-slate-950 p-5 text-slate-300 shadow-xl shadow-slate-950/10 lg:flex">
+          <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="mb-8 flex items-center gap-3 px-2">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-400 text-lg font-black text-slate-950 shadow-lg shadow-sky-400/20">I</span>
+            <span>
+              <strong className="block text-sm tracking-tight text-white">InovaInvite</strong>
+              <span className="text-[11px] font-medium text-slate-400">Panel tuan rumah</span>
+            </span>
+          </a>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="truncate text-sm font-bold text-white">{undangan.nama_anak}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{undangan.nama_orang_tua}</p>
+          </div>
+
+          <p className="mt-7 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Menu utama</p>
+          <nav className="mt-3 space-y-1 text-sm font-semibold">
+            <a href="#ringkasan" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white transition hover:bg-white/10"><IconSparkles className="w-4 h-4 text-sky-300" />Ringkasan</a>
+            <button type="button" onClick={() => setActiveTab("tamu")} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${activeTab === "tamu" ? "bg-white/10 text-white" : "hover:bg-white/10 hover:text-white"}`}><IconUsers className="w-4 h-4 text-sky-300" />Daftar tamu <span className="ml-auto rounded-full bg-sky-400/15 px-2 py-0.5 text-[10px] text-sky-200">{tamu.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("rsvp")} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${activeTab === "rsvp" ? "bg-white/10 text-white" : "hover:bg-white/10 hover:text-white"}`}><IconMessageSquare className="w-4 h-4 text-purple-300" />Buku ucapan <span className="ml-auto rounded-full bg-purple-400/15 px-2 py-0.5 text-[10px] text-purple-200">{rsvpList.length}</span></button>
+          </nav>
+
+          <div className="mt-auto space-y-2">
+            <button type="button" onClick={muat} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-200 transition hover:bg-white/10"><IconRefresh className="w-4 h-4" />Segarkan data</button>
+            <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-400 px-3 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-sky-300"><IconExternalLink className="w-4 h-4" />Lihat undangan</a>
+          </div>
+        </aside>
+
+        <div className="min-w-0 space-y-5">
 
         {/* 1. HEADER UTAMA (ELEGANT GLASS CARD) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 md:p-8">
+        <div className="sticky top-3 z-30 rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-lg shadow-slate-900/5 backdrop-blur-xl md:p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -659,8 +687,15 @@ function KelolaContent() {
           </div>
         </div>
 
+        <nav aria-label="Navigasi panel tuan rumah" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:hidden">
+          <a href="#ringkasan" className="whitespace-nowrap rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-800">Ringkasan</a>
+          <button type="button" onClick={() => setActiveTab("tamu")} className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold ${activeTab === "tamu" ? "bg-sky-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}>Daftar tamu</button>
+          <button type="button" onClick={() => setActiveTab("rsvp")} className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold ${activeTab === "rsvp" ? "bg-sky-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}>Buku ucapan</button>
+          <button type="button" onClick={muat} className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Segarkan</button>
+        </nav>
+
         {/* 2. STATISTIK KARTU RINGKASAN (MODERN METRIC TILES) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div id="ringkasan" className="scroll-mt-32 grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Total Tamu */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition">
             <div className="flex items-center justify-between text-slate-400 mb-2">
@@ -759,7 +794,7 @@ function KelolaContent() {
 
         {/* 4. KONTEN TAB: KELOLA TAMU */}
         {activeTab === "tamu" && (
-          <div className="space-y-6">
+          <div id="daftar-tamu" className="scroll-mt-32 space-y-6">
 
             {/* FORM TAMBAH TAMU */}
             <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80">
@@ -1220,7 +1255,7 @@ function KelolaContent() {
 
         {/* 5. KONTEN TAB: SEMUA DO'A & BUKU TAMU */}
         {activeTab === "rsvp" && (
-          <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+          <div id="buku-ucapan" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h2 className="font-bold text-slate-900 text-lg tracking-tight">
@@ -1421,6 +1456,7 @@ function KelolaContent() {
           </div>
         )}
 
+        </div>
       </div>
     </main>
   );

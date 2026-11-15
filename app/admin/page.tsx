@@ -423,11 +423,40 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-slate-800 p-4 sm:p-6 lg:p-8 font-sans antialiased pb-28">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e0f2fe,_transparent_32%),#f8fafc] text-slate-800 p-3 sm:p-5 lg:p-6 font-sans antialiased pb-28">
+      <div className="mx-auto grid max-w-[1440px] gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-slate-200/80 bg-slate-950 p-5 text-slate-300 shadow-xl shadow-slate-950/10 lg:flex">
+          <a href="#identitas" className="mb-8 flex items-center gap-3 px-2">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-400 text-lg font-black text-slate-950 shadow-lg shadow-sky-400/20">I</span>
+            <span>
+              <strong className="block text-sm tracking-tight text-white">InovaInvite</strong>
+              <span className="text-[11px] font-medium text-slate-400">Admin workspace</span>
+            </span>
+          </a>
+
+          <p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Pengaturan undangan</p>
+          <nav className="mt-3 space-y-1 text-sm font-semibold">
+            <a href="#identitas" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white transition hover:bg-white/10"><IconKey className="w-4 h-4 text-sky-300" />Identitas &amp; akses</a>
+            <a href="#media" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconImage className="w-4 h-4 text-indigo-300" />Foto undangan</a>
+            <a href="#acara" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconCalendar className="w-4 h-4 text-amber-300" />Waktu &amp; lokasi</a>
+            <a href="#keluarga" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconUsers className="w-4 h-4 text-emerald-300" />Keluarga</a>
+            <a href="#amplop" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconCreditCard className="w-4 h-4 text-rose-300" />Amplop digital</a>
+            <a href="#musik" className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/10 hover:text-white"><IconMusic className="w-4 h-4 text-purple-300" />Musik latar</a>
+          </nav>
+
+          <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-bold text-white">Butuh daftar tamu?</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Kelola link personal, RSVP, dan ucapan dari satu tempat.</p>
+            <button type="button" onClick={() => router.push(`/admin/u/${activeSlug}?${editing?.akses_token || token}`)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-xs font-bold text-slate-900 transition hover:bg-sky-100">
+              <IconUsers className="w-4 h-4" />Kelola tamu
+            </button>
+          </div>
+        </aside>
+
+        <div className="min-w-0 space-y-5">
 
         {/* 1. TOP HEADER BAR (EXECUTIVE DASHBOARD NAVBAR) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 md:p-7">
+        <div className="sticky top-3 z-30 rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-lg shadow-slate-900/5 backdrop-blur-xl md:p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
@@ -481,6 +510,15 @@ export default function AdminPage() {
           </div>
         </div>
 
+        <nav aria-label="Navigasi pengaturan" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:hidden">
+          <a href="#identitas" className="whitespace-nowrap rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-800">Identitas</a>
+          <a href="#media" className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Foto</a>
+          <a href="#acara" className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Acara</a>
+          <a href="#keluarga" className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Keluarga</a>
+          <a href="#amplop" className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Amplop</a>
+          <a href="#musik" className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Musik</a>
+        </nav>
+
         {/* NOTIFIKASI PESAN */}
         {pesan && (
           <div
@@ -507,7 +545,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 1: AKSES MANDIRI TUAN RUMAH & SAMPUL */}
         {/* ======================================================== */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="identitas" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
               <IconKey className="w-5 h-5" />
@@ -683,7 +721,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 2: FOTO DOKUMENTASI */}
         {/* ======================================================== */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="media" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
               <IconImage className="w-5 h-5" />
@@ -788,7 +826,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 3: WAKTU, JADWAL & LOKASI */}
         {/* ======================================================== */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="acara" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
               <IconCalendar className="w-5 h-5" />
@@ -918,7 +956,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 4: KAMI YANG BERBAHAGIA & TURUT MENGUNDANG */}
         {/* ======================================================== */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="keluarga" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
@@ -1085,7 +1123,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 5: REKENING & E-WALLET (AMPLOP DIGITAL) */}
         {/* ======================================================== */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="amplop" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
@@ -1218,7 +1256,7 @@ export default function AdminPage() {
         {/* ======================================================== */}
         {/* SEKSI 6: MUSIK LATAR & PEMOTONG DURASI */}
         {/* ======================================================== */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
+        <section id="musik" className="scroll-mt-32 bg-white p-6 sm:p-7 rounded-3xl shadow-xs border border-slate-200/80 space-y-5">
           <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
               <IconMusic className="w-5 h-5" />
@@ -1417,6 +1455,7 @@ export default function AdminPage() {
           </button>
         </div>
 
+        </div>
       </div>
     </main>
   );
