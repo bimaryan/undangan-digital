@@ -1,7 +1,9 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { saveUploadedMedia } from "@/lib/media";
-import { attachUploadedMedia, getUndanganBySlug, getUndanganByToken } from "@/lib/undangan";
+import { attachUploadedMedia, getUndanganBySlug } from "@/lib/undangan";
+import { getAdminSession } from "@/lib/auth";
+import { isSameOrigin } from "@/lib/session";
 
 const FILE_TYPES = {
   jpg: { mime: "image/jpeg", category: "image", maxMb: 10 },
@@ -20,36 +22,38 @@ function getExtension(filename: string) {
   return filename.split(".").pop()?.toLowerCase() ?? "";
 }
 
-async function canUpload(slug: string, token: string) {
-  if (!slug || !token) return null;
+async function canUpload(slug: string) {
+  if (!slug) return null;
 
-  const invitation = await getUndanganBySlug(slug);
-  if (!invitation) return null;
-  if (invitation.akses_token === token) return invitation;
+  // Upload hanya untuk admin yang sudah login. Tuan rumah tidak boleh
+  // mengubah foto/musik undangan.
+  const admin = await getAdminSession();
+  if (!admin) return null;
 
-  // Prefer ADMIN_TOKEN (server-only); retain the old variable for compatibility.
-  const masterToken = process.env.ADMIN_TOKEN || process.env.NEXT_PUBLIC_FIXED_TOKEN;
-  if (masterToken && token === masterToken) return invitation;
-
-  const tokenInvitation = await getUndanganByToken(token);
-  return tokenInvitation?.slug === slug ? invitation : null;
+  return (await getUndanganBySlug(slug)) ?? null;
 }
 
 export async function POST(req: NextRequest) {
   try {
+    if (!isSameOrigin(req)) {
+      return NextResponse.json({ error: "Permintaan ditolak." }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const rawFile = formData.get("file");
     const slug = String(formData.get("slug") ?? "").trim();
-    const token = String(formData.get("token") ?? "").trim();
     const field = String(formData.get("field") ?? "").trim();
 
     if (!(rawFile instanceof File)) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
     }
 
-    const invitation = await canUpload(slug, token);
+    const invitation = await canUpload(slug);
     if (!invitation) {
-      return NextResponse.json({ error: "Sesi admin tidak valid. Muat ulang halaman lalu coba lagi." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Sesi admin tidak valid. Silakan login ulang lalu coba lagi." },
+        { status: 401 }
+      );
     }
 
     const extension = getExtension(rawFile.name);

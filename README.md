@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Undangan Digital
 
-## Getting Started
+Aplikasi undangan pernikahan/khitanan berbasis Next.js + PostgreSQL.
 
-First, run the development server:
+## Menjalankan Proyek
 
 ```bash
+npm install
+cp .env.example .env.local   # Windows: copy .env.example .env.local
+# isi DATABASE_URL / PGHOST dkk. dan AUTH_SECRET
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Autentikasi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Proyek ini memakai dua jenis akses:
 
-## Learn More
+1. **Admin** — login dengan email + password di `/admin/login`.
+2. **Tuan rumah** — membuka tautan akses per undangan (token), lalu sesi disimpan
+   di cookie `httpOnly`. Tuan rumah hanya bisa mengelola tamu/RSVP, bukan isi
+   undangan atau token.
 
-To learn more about Next.js, take a look at the following resources:
+Tidak ada token yang di-hardcode di kode. Token tuan rumah diatur oleh admin di
+panel `/admin` dan disimpan di kolom `undangan.akses_token`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. Siapkan database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Untuk database baru, import `schema.sql`. Untuk database yang sudah berjalan,
+jalankan migrasi sekali:
 
-## Deploy on Vercel
+```bash
+psql "$DATABASE_URL" -f migrations/001_auth.sql
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Migrasi menambahkan tabel `admin_users`, kolom `undangan.token_version`, indeks
+unik token, dan indeks relasi tamu/RSVP.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. Buat akun admin
+
+```bash
+npm run create-admin -- admin@domain.com "password-ku"
+```
+
+Atau tanpa argumen (interaktif):
+
+```bash
+npm run create-admin
+```
+
+Password disimpan sebagai hash scrypt. Password minimal 8 karakter.
+
+### 3. Atur token tuan rumah
+
+1. Login ke `/admin`.
+2. Pada bagian **Token Akses Tuan Rumah**, isi token (6–32 karakter, huruf kecil,
+   angka, `-`, `_`) atau klik **Token Baru**.
+3. Klik **Simpan Perubahan**.
+4. Salin **Link Tuan Rumah** dan kirim ke tuan rumah.
+
+Tautan berbentuk `/admin/u/<slug>?token=<token>`. Saat dibuka, token ditukar
+menjadi cookie sesi lalu URL dibersihkan. Mengganti token akan otomatis
+mengakhiri sesi tuan rumah yang lama.
+
+## Environment Penting
+
+- `AUTH_SECRET` — wajib, minimal 32 karakter, untuk menandatangani cookie sesi.
+- `DATABASE_URL` **atau** `PGHOST`/`PGPORT`/`PGUSER`/`PGPASSWORD`/`PGDATABASE`.
+- `NEXT_PUBLIC_FIXED_SLUG` — slug default saat membuka `/` (hanya redirect,
+  bukan kredensial).
+
+Lihat `.env.example` untuk daftar lengkap.
+
+## Build
+
+```bash
+npm run build
+npm start
+```

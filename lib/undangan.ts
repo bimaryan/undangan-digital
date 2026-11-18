@@ -1,17 +1,30 @@
 import pool from "./db";
 
 export async function getUndanganBySlug(slug: string) {
-  const res = await pool.query("SELECT * FROM undangan WHERE slug = $1", [slug]);
+  // `tanggal::text` mencegah pergeseran tanggal akibat konversi DATE -> Date
+  // menggunakan zona waktu server (lihat countdown & file kalender).
+  const res = await pool.query(
+    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam
+     FROM undangan u WHERE u.slug = $1`,
+    [slug]
+  );
   return res.rows[0] || null;
 }
 
 export async function getUndanganByToken(token: string) {
-  const res = await pool.query("SELECT * FROM undangan WHERE akses_token = $1", [token]);
+  const res = await pool.query(
+    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam
+     FROM undangan u WHERE u.akses_token = $1`,
+    [token]
+  );
   return res.rows[0] || null;
 }
 
 export async function getAllUndangan() {
-  const res = await pool.query("SELECT * FROM undangan ORDER BY created_at DESC");
+  const res = await pool.query(
+    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam
+     FROM undangan u ORDER BY u.created_at DESC`
+  );
   return res.rows;
 }
 
@@ -116,7 +129,11 @@ export async function updateUndanganLengkap(id: number, body: Record<string, unk
       rekening = $13,
       ayat = $14,
       data_json = $15,
-      akses_token = COALESCE($16, akses_token)
+      akses_token = COALESCE($16, akses_token),
+      token_version = CASE
+        WHEN $16 IS NOT NULL AND $16 <> akses_token THEN token_version + 1
+        ELSE token_version
+      END
      WHERE id = $17 RETURNING *`,
     [
       body.slug || null,
@@ -189,24 +206,29 @@ export async function tambahBanyakTamu(undanganId: number, daftarNama: string[])
   return hasil;
 }
 
-export async function updateTamu(id: number, nama: string) {
+export async function updateTamu(id: number, undanganId: number, nama: string) {
   const res = await pool.query(
-    "UPDATE tamu SET nama = $1 WHERE id = $2 RETURNING *",
-    [nama.trim(), id]
+    "UPDATE tamu SET nama = $1 WHERE id = $2 AND undangan_id = $3 RETURNING *",
+    [nama.trim(), id, undanganId]
   );
   return res.rows[0];
 }
 
-export async function updateTamuRsvpManual(id: number, hadir: boolean | null, ucapan?: string) {
+export async function updateTamuRsvpManual(
+  id: number,
+  undanganId: number,
+  hadir: boolean | null,
+  ucapan?: string
+) {
   const res = await pool.query(
-    "UPDATE tamu SET hadir = $1, ucapan = COALESCE($2, ucapan), rsvp_at = NOW() WHERE id = $3 RETURNING *",
-    [hadir, ucapan || null, id]
+    "UPDATE tamu SET hadir = $1, ucapan = COALESCE($2, ucapan), rsvp_at = NOW() WHERE id = $3 AND undangan_id = $4 RETURNING *",
+    [hadir, ucapan || null, id, undanganId]
   );
   return res.rows[0];
 }
 
-export async function hapusTamu(id: number) {
-  await pool.query("DELETE FROM tamu WHERE id = $1", [id]);
+export async function hapusTamu(id: number, undanganId: number) {
+  await pool.query("DELETE FROM tamu WHERE id = $1 AND undangan_id = $2", [id, undanganId]);
 }
 
 export async function getRsvpByUndangan(undanganId: number) {
@@ -217,8 +239,8 @@ export async function getRsvpByUndangan(undanganId: number) {
   return res.rows;
 }
 
-export async function hapusRsvp(id: number) {
-  await pool.query("DELETE FROM rsvp WHERE id = $1", [id]);
+export async function hapusRsvp(id: number, undanganId: number) {
+  await pool.query("DELETE FROM rsvp WHERE id = $1 AND undangan_id = $2", [id, undanganId]);
 }
 
 export async function simpanRsvp(

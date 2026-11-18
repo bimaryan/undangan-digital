@@ -21,8 +21,26 @@ CREATE TABLE IF NOT EXISTS undangan (
   rekening JSONB DEFAULT '[]'::jsonb,
   ayat TEXT,
   data_json JSONB DEFAULT '{}'::jsonb,
+  token_version INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Token tuan rumah harus unik dan mudah dibagikan. token_version dipakai untuk
+-- membatalkan sesi tuan rumah yang lama saat token dirotasi admin.
+CREATE UNIQUE INDEX IF NOT EXISTS undangan_akses_token_unique
+  ON undangan (LOWER(akses_token));
+
+-- 1b. Akun admin (login email + password). Password disimpan sebagai hash
+-- scrypt, dibuat lewat `npm run create-admin`. Tidak ada kredensial di kode.
+CREATE TABLE IF NOT EXISTS admin_users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS admin_users_email_lower_unique
+  ON admin_users (LOWER(email));
 
 -- Berkas foto dan musik dari panel admin. Disimpan di database agar tidak
 -- hilang setelah redeploy atau restart server.
@@ -58,7 +76,12 @@ CREATE TABLE IF NOT EXISTS rsvp (
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
 
+-- Indeks untuk mempercepat panel admin & pencocokan RSVP per undangan.
+CREATE INDEX IF NOT EXISTS tamu_undangan_idx ON tamu (undangan_id);
+CREATE INDEX IF NOT EXISTS rsvp_undangan_idx ON rsvp (undangan_id);
+
 -- Data Awal Contoh Undangan
+-- Token di bawah hanya contoh. Ganti lewat panel /admin setelah login.
 INSERT INTO undangan (
   id, slug, nama_anak, nama_orang_tua, tanggal, jam, lokasi, akses_token, hiburan, ayat, turut_mengundang, orang_berbahagia, rekening, data_json
 ) VALUES (
@@ -69,7 +92,7 @@ INSERT INTO undangan (
   '2026-11-18',
   '08:00:00',
   'Desa Rambatan Kulon (Bangkir) Rt. 07 Rw. 01 blok Kangkung Kec. Lohbener Kab. Indramayu',
-  'bumarpuah',
+  'ganti-token-tuan-rumah',
   'Seni Reog Vikar Group',
   'Dizana zakaria memohon kepada Tuhannya ia berkata : Ya Tuhanku anugerahkanlah aku seorang anak yang baik dari sisimu, sesungguhnya engkau maha mendengar do''a',
   '[
