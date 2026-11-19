@@ -125,7 +125,9 @@ async function main() {
     const result = await client.query(
       `INSERT INTO admin_users (email, password_hash)
        VALUES ($1, $2)
-       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
+       ON CONFLICT (email) DO UPDATE SET
+         password_hash = EXCLUDED.password_hash,
+         session_version = admin_users.session_version + 1
        RETURNING email`,
       [email, hashPassword(password)]
     );

@@ -32,10 +32,12 @@ jalankan migrasi sekali:
 
 ```bash
 psql "$DATABASE_URL" -f migrations/001_auth.sql
+psql "$DATABASE_URL" -f migrations/002_admin_session.sql
 ```
 
-Migrasi menambahkan tabel `admin_users`, kolom `undangan.token_version`, indeks
-unik token, dan indeks relasi tamu/RSVP.
+Migrasi 001 menambahkan tabel `admin_users`, kolom `undangan.token_version`,
+indeks unik token, dan indeks relasi tamu/RSVP. Migrasi 002 menambahkan
+`admin_users.session_version` untuk membatalkan sesi admin lama.
 
 ### 2. Buat akun admin
 
@@ -49,9 +51,17 @@ Atau tanpa argumen (interaktif):
 npm run create-admin
 ```
 
-Password disimpan sebagai hash scrypt. Password minimal 8 karakter.
+Password disimpan sebagai hash scrypt. Password minimal 8 karakter. Menjalankan
+ulang perintah untuk email yang sama akan mengganti password dan mengakhiri
+semua sesi admin lama.
 
-### 3. Atur token tuan rumah
+### 3. Ubah password dari panel
+
+Buka `/admin/akun` dari sidebar editor. Halaman ini meminta password saat ini,
+lalu mengganti password dan mengeluarkan semua sesi admin di perangkat lain.
+Tersedia juga tombol **Keluar dari semua perangkat**.
+
+### 4. Atur token tuan rumah
 
 1. Login ke `/admin`.
 2. Pada bagian **Token Akses Tuan Rumah**, isi token (6–32 karakter, huruf kecil,

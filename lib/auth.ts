@@ -8,6 +8,7 @@ import {
   type AdminSession,
   type HostSession,
   constantTimeEquals,
+  hashPassword,
   signSession,
   verifyPassword,
   verifySession,
@@ -25,7 +26,24 @@ const baseCookieOptions = {
 export async function getAdminSession(): Promise<AdminSession | null> {
   const token = (await cookies()).get(ADMIN_COOKIE)?.value;
   const payload = verifySession<AdminSession>(token);
-  return payload?.role === "admin" ? payload : null;
+  if (!payload || payload.role !== "admin" || typeof payload.ver !== "number") {
+    return null;
+  }
+
+  // Sesi admin bersifat stateless, jadi versi di cookie harus dicocokkan dengan
+  // database. Menaikkan session_version langsung membatalkan cookie lama.
+  try {
+    const result = await pool.query<{ session_version: number | null }>(
+      "SELECT session_version FROM admin_users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+      [payload.sub]
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    return Number(row.session_version ?? 1) === payload.ver ? payload : null;
+  } catch (error) {
+    console.error("Admin session check failed:", error);
+    return null;
+  }
 }
 
 export async function getHostSession(): Promise<HostSession | null> {
@@ -59,11 +77,12 @@ export async function getHostAccess(slug: string): Promise<"admin" | "host" | nu
   }
 }
 
-export async function setAdminSessionCookie(email: string): Promise<void> {
+export async function setAdminSessionCookie(email: string, sessionVersion: number): Promise<void> {
   const expiresAt = Date.now() + ADMIN_SESSION_TTL_SECONDS * 1000;
   const token = signSession({
     role: "admin",
     sub: email,
+    ver: sessionVersion,
     exp: Math.floor(expiresAt / 1000),
   });
 
@@ -102,15 +121,19 @@ type AdminRow = {
   id: number;
   email: string;
   password_hash: string;
+  session_version: number | null;
 };
 
 export async function authenticateAdmin(
   email: string,
   password: string
-): Promise<{ ok: true; email: string } | { ok: false; reason: "invalid" | "not_ready" | "db_error" }> {
+): Promise<
+  | { ok: true; email: string; sessionVersion: number }
+  | { ok: false; reason: "invalid" | "not_ready" | "db_error" }
+> {
   try {
     const result = await pool.query<AdminRow>(
-      "SELECT id, email, password_hash FROM admin_users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+      "SELECT id, email, password_hash, session_version FROM admin_users WHERE LOWER(email) = LOWER($1) LIMIT 1",
       [email.trim()]
     );
 
@@ -124,9 +147,78 @@ export async function authenticateAdmin(
       return { ok: false, reason: "invalid" };
     }
 
-    return { ok: true, email: admin.email };
+    return {
+      ok: true,
+      email: admin.email,
+      sessionVersion: Number(admin.session_version ?? 1),
+    };
   } catch (error) {
     console.error("Admin authentication failed:", error);
+    return { ok: false, reason: "db_error" };
+  }
+}
+
+export async function changeAdminPassword(
+  email: string,
+  sessionVersion: number,
+  currentPassword: string,
+  newPassword: string
+): Promise<
+  | { ok: true; sessionVersion: number }
+  | { ok: false; reason: "invalid_password" | "session_changed" | "not_found" | "db_error" }
+> {
+  try {
+    const result = await pool.query<AdminRow>(
+      "SELECT id, email, password_hash, session_version FROM admin_users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+      [email]
+    );
+    const admin = result.rows[0];
+    if (!admin) return { ok: false, reason: "not_found" };
+
+    if (Number(admin.session_version ?? 1) !== sessionVersion) {
+      return { ok: false, reason: "session_changed" };
+    }
+    if (!verifyPassword(currentPassword, admin.password_hash)) {
+      return { ok: false, reason: "invalid_password" };
+    }
+
+    const updated = await pool.query<{ session_version: number }>(
+      `UPDATE admin_users
+       SET password_hash = $1, session_version = session_version + 1
+       WHERE id = $2 AND session_version = $3
+       RETURNING session_version`,
+      [hashPassword(newPassword), admin.id, sessionVersion]
+    );
+
+    if (!updated.rows[0]) {
+      return { ok: false, reason: "session_changed" };
+    }
+
+    return { ok: true, sessionVersion: Number(updated.rows[0].session_version) };
+  } catch (error) {
+    console.error("Admin password change failed:", error);
+    return { ok: false, reason: "db_error" };
+  }
+}
+
+export async function rotateAdminSessionVersion(
+  email: string,
+  sessionVersion: number
+): Promise<
+  { ok: true; sessionVersion: number } | { ok: false; reason: "session_changed" | "db_error" }
+> {
+  try {
+    const result = await pool.query<{ session_version: number }>(
+      `UPDATE admin_users
+       SET session_version = session_version + 1
+       WHERE LOWER(email) = LOWER($1) AND session_version = $2
+       RETURNING session_version`,
+      [email, sessionVersion]
+    );
+    if (!result.rows[0]) return { ok: false, reason: "session_changed" };
+    return { ok: true, sessionVersion: Number(result.rows[0].session_version) };
+  } catch (error) {
+    console.error("Admin session rotation failed:", error);
     return { ok: false, reason: "db_error" };
   }
 }

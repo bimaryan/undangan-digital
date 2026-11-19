@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email atau password salah." }, { status: 401 });
   }
 
-  await setAdminSessionCookie(result.email);
+  await setAdminSessionCookie(result.email, result.sessionVersion);
   return NextResponse.json({ ok: true, redirect: next });
 }
