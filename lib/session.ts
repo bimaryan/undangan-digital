@@ -36,7 +36,6 @@ export const USER_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const HOST_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 16) {

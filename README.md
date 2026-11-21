@@ -40,12 +40,14 @@ jalankan migrasi secara berurutan:
 ```bash
 psql "$DATABASE_URL" -f migrations/001_auth.sql
 psql "$DATABASE_URL" -f migrations/002_multi_role.sql
+psql "$DATABASE_URL" -f migrations/003_admin_session.sql
 ```
 
 Migrasi `001` menambahkan tabel auth lama, kolom `undangan.token_version`, indeks
 unik token, dan indeks relasi tamu/RSVP. Migrasi `002` membuat tabel `users`
 (admin & tenant), memindahkan akun `admin_users`, dan menambahkan kolom
-`undangan.user_id` sebagai pemilik undangan.
+`undangan.user_id` sebagai pemilik undangan. Migrasi `003` menambahkan
+`session_version` pada `users` dan `admin_users` untuk membatalkan sesi admin lama.
 
 ### 2. Buat akun admin
 
@@ -59,7 +61,9 @@ Atau tanpa argumen (interaktif):
 npm run create-admin
 ```
 
-Password disimpan sebagai hash scrypt. Password minimal 8 karakter.
+Password disimpan sebagai hash scrypt. Password minimal 8 karakter. Menjalankan
+ulang perintah untuk email yang sama akan mengganti password dan mengakhiri
+semua sesi admin lama.
 
 ### 3. Buat akun client / tenant
 
@@ -78,7 +82,13 @@ Setelah akun dibuat, tugaskan undangan ke client dari editor undangan
 (**Pemilik Undangan**) atau saat membuat undangan baru. Client kemudian dapat
 login dan mengelola undangannya dari `/dashboard`.
 
-### 4. Atur token tuan rumah
+### 4. Ubah password dari panel
+
+Buka `/admin/akun` dari navbar panel admin. Halaman ini meminta password saat
+ini, lalu mengganti password dan mengeluarkan semua sesi admin di perangkat
+lain. Tersedia juga tombol **Keluar dari semua perangkat**.
+
+### 5. Atur token tuan rumah
 
 1. Login ke `/dashboard` (area client / tenant).
 2. Pada bagian **Identitas Sampul**, atur judul sampul, tanggal, nama anak, label acara,

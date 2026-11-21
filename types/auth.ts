@@ -5,6 +5,7 @@ export type AdminSession = {
   sub: string;
   userId: number;
   name?: string;
+  ver: number;
   exp: number;
 };
 

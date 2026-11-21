@@ -126,7 +126,10 @@ async function main() {
     const result = await client.query(
       `INSERT INTO users (email, password_hash, role, name)
        VALUES ($1, $2, 'admin', 'Administrator')
-       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, role = 'admin'
+       ON CONFLICT (email) DO UPDATE SET
+         password_hash = EXCLUDED.password_hash,
+         role = 'admin',
+         session_version = users.session_version + 1
        RETURNING email`,
       [email, hash]
     );
@@ -135,7 +138,9 @@ async function main() {
     await client.query(
       `INSERT INTO admin_users (email, password_hash)
        VALUES ($1, $2)
-       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
+       ON CONFLICT (email) DO UPDATE SET
+         password_hash = EXCLUDED.password_hash,
+         session_version = admin_users.session_version + 1`,
       [email, hash]
     ).catch(() => {});
 

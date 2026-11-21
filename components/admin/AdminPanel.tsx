@@ -246,6 +246,12 @@ export default function AdminPanel({ adminEmail }: { adminEmail?: string }) {
               </span>
             )}
             <button
+              onClick={() => router.push("/admin/akun")}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-slate-700"
+            >
+              Akun
+            </button>
+            <button
               onClick={handleLogout}
               className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-rose-600 hover:border-rose-600 hover:text-white"
             >
