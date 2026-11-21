@@ -1,11 +1,15 @@
 import pool from "./db";
+import { hashPassword } from "./session";
 
 export async function getUndanganBySlug(slug: string) {
   // `tanggal::text` mencegah pergeseran tanggal akibat konversi DATE -> Date
   // menggunakan zona waktu server (lihat countdown & file kalender).
   const res = await pool.query(
-    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam
-     FROM undangan u WHERE u.slug = $1`,
+    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam,
+            usr.name AS tenant_name, usr.email AS tenant_email
+     FROM undangan u
+     LEFT JOIN users usr ON usr.id = u.user_id
+     WHERE u.slug = $1`,
     [slug]
   );
   return res.rows[0] || null;
@@ -13,17 +17,36 @@ export async function getUndanganBySlug(slug: string) {
 
 export async function getUndanganByToken(token: string) {
   const res = await pool.query(
-    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam
-     FROM undangan u WHERE u.akses_token = $1`,
+    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam,
+            usr.name AS tenant_name, usr.email AS tenant_email
+     FROM undangan u
+     LEFT JOIN users usr ON usr.id = u.user_id
+     WHERE u.akses_token = $1`,
     [token]
   );
   return res.rows[0] || null;
 }
 
-export async function getAllUndangan() {
+export async function getAllUndangan(userId?: number) {
+  if (userId) {
+    const res = await pool.query(
+      `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam,
+              usr.name AS tenant_name, usr.email AS tenant_email
+       FROM undangan u
+       LEFT JOIN users usr ON usr.id = u.user_id
+       WHERE u.user_id = $1
+       ORDER BY u.created_at DESC`,
+      [userId]
+    );
+    return res.rows;
+  }
+
   const res = await pool.query(
-    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam
-     FROM undangan u ORDER BY u.created_at DESC`
+    `SELECT u.*, u.tanggal::text AS tanggal, u.jam::text AS jam,
+            usr.name AS tenant_name, usr.email AS tenant_email
+     FROM undangan u
+     LEFT JOIN users usr ON usr.id = u.user_id
+     ORDER BY u.created_at DESC`
   );
   return res.rows;
 }
@@ -35,12 +58,93 @@ export async function createUndangan(data: {
   tanggal: string;
   jam: string;
   lokasi: string;
+  user_id?: number | null;
+  data_json?: Record<string, unknown>;
 }) {
   const token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   const res = await pool.query(
-    `INSERT INTO undangan (slug, nama_anak, nama_orang_tua, tanggal, jam, lokasi, akses_token)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [data.slug, data.nama_anak, data.nama_orang_tua, data.tanggal, data.jam, data.lokasi, token]
+    `INSERT INTO undangan (slug, nama_anak, nama_orang_tua, tanggal, jam, lokasi, akses_token, user_id, data_json)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+    [
+      data.slug,
+      data.nama_anak,
+      data.nama_orang_tua,
+      data.tanggal,
+      data.jam,
+      data.lokasi,
+      token,
+      data.user_id || null,
+      data.data_json ? JSON.stringify(data.data_json) : null,
+    ]
+  );
+  return res.rows[0];
+}
+
+export async function getAllTenants() {
+  const res = await pool.query(
+    `SELECT u.id, u.email, u.name, u.role, u.created_at,
+            COUNT(und.id)::int AS invitation_count
+     FROM users u
+     LEFT JOIN undangan und ON und.user_id = u.id
+     WHERE u.role = 'tenant'
+     GROUP BY u.id, u.email, u.name, u.role, u.created_at
+     ORDER BY u.created_at DESC`
+  );
+  return res.rows;
+}
+
+export async function createTenantUser(email: string, password: string, name: string) {
+  const hash = hashPassword(password);
+  const res = await pool.query(
+    `INSERT INTO users (email, password_hash, role, name)
+     VALUES ($1, $2, 'tenant', $3)
+     RETURNING id, email, name, role, created_at`,
+    [email.trim().toLowerCase(), hash, name.trim()]
+  );
+  return res.rows[0];
+}
+
+export async function emailExists(email: string): Promise<boolean> {
+  const normalized = email.trim();
+  const res = await pool.query(
+    "SELECT 1 FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+    [normalized]
+  );
+  if (res.rows.length > 0) return true;
+
+  try {
+    const legacy = await pool.query(
+      "SELECT 1 FROM admin_users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+      [normalized]
+    );
+    return legacy.rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteTenantUser(id: number) {
+  await pool.query(
+    `UPDATE undangan
+     SET user_id = NULL
+     WHERE user_id = (SELECT id FROM users WHERE id = $1 AND role = 'tenant')`,
+    [id]
+  );
+  await pool.query("DELETE FROM users WHERE id = $1 AND role = 'tenant'", [id]);
+}
+
+export async function assignUndanganTenant(undanganId: number, userId: number | null) {
+  const res = await pool.query(
+    "UPDATE undangan SET user_id = $1 WHERE id = $2 RETURNING *",
+    [userId, undanganId]
+  );
+  return res.rows[0];
+}
+
+export async function assignUndanganTenantBySlug(slug: string, userId: number | null) {
+  const res = await pool.query(
+    "UPDATE undangan SET user_id = $1 WHERE slug = $2 RETURNING *",
+    [userId, slug]
   );
   return res.rows[0];
 }
@@ -68,13 +172,13 @@ export async function attachUploadedMedia(
 
   // Musik disimpan di JSON karena metadata lagu (judul dan titik loop) juga
   // berada di sana. URL disimpan segera setelah upload agar tetap ada walau
-  // admin me-refresh sebelum menekan tombol Simpan keseluruhan formulir.
+  // admin me-refresh halaman sebelum menekan "Simpan Perubahan".
   await pool.query(
     `UPDATE undangan
      SET data_json = jsonb_set(
-       jsonb_set(COALESCE(data_json, '{}'::jsonb), '{musik_url}', to_jsonb($1::text), true),
-       '{musik_disabled}',
-       'false'::jsonb,
+       COALESCE(data_json, '{}'::jsonb),
+       '{musik_url}',
+       to_jsonb($1::text),
        true
      )
      WHERE id = $2`,
@@ -83,9 +187,6 @@ export async function attachUploadedMedia(
 }
 
 export async function updateUndanganLengkap(id: number, body: Record<string, unknown>) {
-  // `data_json` ikut ada di payload admin sebagai nilai lama dari database.
-  // Terapkan lebih dulu agar nilai form terbaru di bawahnya (termasuk URL musik
-  // hasil upload) tidak tertimpa lagi saat disimpan.
   const previousDataJson =
     typeof body.data_json === "object" && body.data_json !== null
       ? (body.data_json as Record<string, unknown>)
@@ -107,10 +208,19 @@ export async function updateUndanganLengkap(id: number, body: Record<string, unk
     musik_judul: body.musik_judul || "",
     musik_start: body.musik_start || "",
     musik_end: body.musik_end || "",
-    // Menyimpan pilihan hapus secara eksplisit agar berkas audio lama tidak
-    // otomatis dimunculkan lagi oleh mekanisme pemulihan di panel admin.
     musik_disabled: body.musik_disabled === true,
   };
+
+  const hasUserId = Object.prototype.hasOwnProperty.call(body, "user_id");
+  const rawUserId = body.user_id;
+  const parsedUserId =
+    rawUserId === null || rawUserId === undefined || rawUserId === ""
+      ? null
+      : Number(rawUserId);
+  const targetUserId =
+    parsedUserId !== null && Number.isSafeInteger(parsedUserId) && parsedUserId > 0
+      ? parsedUserId
+      : null;
 
   const res = await pool.query(
     `UPDATE undangan SET
@@ -133,6 +243,10 @@ export async function updateUndanganLengkap(id: number, body: Record<string, unk
       token_version = CASE
         WHEN $16 IS NOT NULL AND $16 <> akses_token THEN token_version + 1
         ELSE token_version
+      END,
+      user_id = CASE
+        WHEN $18::boolean THEN $19
+        ELSE user_id
       END
      WHERE id = $17 RETURNING *`,
     [
@@ -153,6 +267,8 @@ export async function updateUndanganLengkap(id: number, body: Record<string, unk
       JSON.stringify(dataJson),
       body.akses_token || null,
       id,
+      hasUserId,
+      targetUserId,
     ]
   );
   return res.rows[0];
@@ -205,6 +321,8 @@ export async function tambahBanyakTamu(undanganId: number, daftarNama: string[])
   }
   return hasil;
 }
+
+export const tambahTamuBatch = tambahBanyakTamu;
 
 export async function updateTamu(id: number, undanganId: number, nama: string) {
   const res = await pool.query(

@@ -4,6 +4,23 @@ import {
   scryptSync,
   timingSafeEqual,
 } from "crypto";
+import type {
+  AdminSession,
+  TenantSession,
+  HostSession,
+  SessionPayload,
+  UserRole,
+  User,
+} from "@/types/auth";
+
+export type {
+  AdminSession,
+  TenantSession,
+  HostSession,
+  SessionPayload,
+  UserRole,
+  User,
+};
 
 /**
  * Pure session/token helpers shared by Server Components, Route Handlers and
@@ -11,26 +28,14 @@ import {
  * from `proxy.ts`.
  */
 
-export const ADMIN_COOKIE = "admin_session";
+export const AUTH_COOKIE = "auth_session";
+export const ADMIN_COOKIE = "admin_session"; // Tetap didukung untuk kompatibilitas
 export const HOST_COOKIE = "host_session";
 
+export const USER_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const HOST_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-export type AdminSession = {
-  role: "admin";
-  sub: string;
-  exp: number;
-};
-
-export type HostSession = {
-  role: "host";
-  slug: string;
-  ver: number;
-  exp: number;
-};
-
-export type SessionPayload = AdminSession | HostSession;
 
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET;

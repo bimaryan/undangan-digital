@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { clearAdminSessionCookie, clearHostSessionCookie } from "@/lib/auth";
+import { clearAdminSessionCookie } from "@/lib/auth";
 import { isSameOrigin } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
@@ -8,6 +8,5 @@ export async function POST(req: NextRequest) {
   }
 
   await clearAdminSessionCookie();
-  await clearHostSessionCookie();
   return NextResponse.json({ ok: true });
 }

@@ -14,13 +14,8 @@ import {
 } from "@/lib/undangan";
 import { getLatestUploadedAudioForUndangan } from "@/lib/media";
 import { getHostAccess } from "@/lib/auth";
-import {
-  isValidHostToken,
-  isSameOrigin,
-  normalizeHostToken,
-} from "@/lib/session";
-
-type Access = "admin" | "host";
+import { isSameOrigin } from "@/lib/session";
+type Access = "admin" | "tenant" | "host";
 
 async function authorize(slug: string): Promise<
   | { status: "ok"; access: Access; data: Record<string, unknown> & { id: number } }
@@ -86,11 +81,6 @@ export async function GET(
         };
         musicRecovered = true;
       }
-    }
-
-    // Tuan rumah tidak perlu (dan sebaiknya tidak) menerima token aksesnya.
-    if (auth.access === "host") {
-      undangan.akses_token = null;
     }
 
     const [tamu, rsvp] = await Promise.all([
@@ -191,15 +181,19 @@ export async function PUT(
       return NextResponse.json({ ok: true });
     }
 
-    // Edit data undangan lengkap hanya untuk admin.
-    if (auth.access !== "admin") {
+    // Edit data undangan lengkap untuk admin dan tenant pemilik undangan.
+    if (auth.access !== "admin" && auth.access !== "tenant") {
       return NextResponse.json(
-        { error: "Hanya admin yang dapat mengubah isi undangan." },
+        { error: "Hanya admin atau pemilik undangan (tenant) yang dapat mengubah isi undangan." },
         { status: 403 }
       );
     }
 
-    const required = ["nama_anak", "nama_orang_tua", "tanggal", "jam", "lokasi"] as const;
+    if (auth.access === "tenant") {
+      delete body.user_id;
+    }
+
+    const required = ["nama_anak", "tanggal", "jam", "lokasi"] as const;
     for (const field of required) {
       if (!body[field] || !String(body[field]).trim()) {
         return NextResponse.json(
@@ -207,20 +201,6 @@ export async function PUT(
           { status: 400 }
         );
       }
-    }
-
-    if (body.akses_token !== undefined && body.akses_token !== null) {
-      const token = normalizeHostToken(String(body.akses_token));
-      if (!isValidHostToken(token)) {
-        return NextResponse.json(
-          {
-            error:
-              "Token tuan rumah harus 6–32 karakter dan hanya berisi huruf kecil, angka, tanda minus, atau garis bawah.",
-          },
-          { status: 400 }
-        );
-      }
-      body.akses_token = token;
     }
 
     const updated = await updateUndanganLengkap(undanganId, body);
@@ -235,7 +215,7 @@ export async function PUT(
 
     if (typeof err === "object" && err !== null && (err as { code?: string }).code === "23505") {
       return NextResponse.json(
-        { error: "Token tuan rumah itu sudah dipakai undangan lain. Pilih token lain." },
+        { error: "Slug undangan sudah digunakan oleh undangan lain. Pilih slug lain." },
         { status: 409 }
       );
     }

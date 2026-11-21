@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS undangan (
   ayat TEXT,
   data_json JSONB DEFAULT '{}'::jsonb,
   token_version INTEGER NOT NULL DEFAULT 1,
+  user_id INTEGER,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
 
@@ -30,8 +31,32 @@ CREATE TABLE IF NOT EXISTS undangan (
 CREATE UNIQUE INDEX IF NOT EXISTS undangan_akses_token_unique
   ON undangan (LOWER(akses_token));
 
--- 1b. Akun admin (login email + password). Password disimpan sebagai hash
--- scrypt, dibuat lewat `npm run create-admin`. Tidak ada kredensial di kode.
+-- 1b. Tabel Pengguna (Admin & Client / Tenant)
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'tenant', -- 'admin' | 'tenant'
+  name VARCHAR(255),
+  created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique
+  ON users (LOWER(email));
+
+-- Hubungkan pemilik undangan ke akun pengguna (client / tenant).
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'undangan_user_id_fkey'
+  ) THEN
+    ALTER TABLE undangan
+      ADD CONSTRAINT undangan_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+-- Kompatibilitas mundur dengan admin_users
 CREATE TABLE IF NOT EXISTS admin_users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,

@@ -2,14 +2,7 @@
 
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-
-type Account = {
-  id?: string;
-  type: "bank" | "wallet";
-  label: string;
-  no: string;
-  name: string;
-};
+import type { Rekening as Account, FloraVariant, UndanganData } from "@/types";
 
 const defaultAccounts: Account[] = [
   { id: "bca", type: "bank", label: "BCA", no: "[NO. REKENING]", name: "[NAMA PEMILIK]" },
@@ -39,8 +32,6 @@ const defaultOrangBerbahagia = [
     keterangan: "Binti Bpk. Kartam, Alm. - Ibu Sari, Almh.\n(Rambatan Kulon-Bangkir)",
   },
 ];
-
-type FloraVariant = "tl" | "tr" | "bl" | "br";
 
 function Flora({ variant = "tl" }: { variant?: FloraVariant }) {
   return (
@@ -346,39 +337,6 @@ function MusicPlayer({
   );
 }
 
-type UndanganData = {
-  slug?: string;
-  nama_anak?: string;
-  nama_orang_tua?: string;
-  tanggal?: string | Date;
-  jam?: string;
-  lokasi?: string;
-  foto_cover?: string;
-  foto_acara?: string;
-  maps_url?: string;
-  hiburan?: string;
-  turut_mengundang?: string[];
-  orang_berbahagia?: Array<{ nama: string; keterangan: string }>;
-  rekening?: Array<{ type: "bank" | "wallet"; label: string; no: string; name: string }>;
-  ayat?: string;
-  data_json?: {
-    judul_sampul?: string;
-    tanggal_sampul?: string;
-    label_acara?: string;
-    tempat_singkat?: string;
-    hari_acara?: string;
-    tanggal_acara?: string;
-    jam_acara?: string;
-    sekeluarga?: string;
-    alamat_keluarga?: string;
-    footer_text?: string;
-    musik_url?: string;
-    musik_judul?: string;
-    musik_start?: string;
-    musik_end?: string;
-  };
-};
-
 export default function UndanganClient({
   data,
   guest: initialGuest,
@@ -405,9 +363,24 @@ export default function UndanganClient({
 
   const dj = data?.data_json || {};
 
+  const noWaList = Array.isArray(dj.no_wa_penerima) ? dj.no_wa_penerima.filter((v) => typeof v === "string" && v.trim().length > 0) : [];
+  const noWaPhone = noWaList.length > 0 ? noWaList[0].trim() : "628976632321";
+
   // Variabel teks yang terintegrasi penuh
   const judulSampul = dj.judul_sampul || "UNDANGAN";
-  const tanggalSampul = dj.tanggal_sampul || "Rabu, 18 November 2026";
+  const rawTanggalSampul = dj.tanggal_sampul || "";
+  const formatTanggalSampul = (iso: string) => {
+    const [isoYear, isoMonth, isoDay] = iso.split("-").map(Number);
+    return new Date(isoYear, isoMonth - 1, isoDay).toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+  const tanggalSampul = /^\d{4}-\d{2}-\d{2}$/.test(rawTanggalSampul)
+    ? formatTanggalSampul(rawTanggalSampul)
+    : rawTanggalSampul || "Rabu, 18 November 2026";
   const namaAnak = data?.nama_anak || "Zayyan Arkana Alfarizqi";
   const labelAcara = dj.label_acara || "Khitanan :";
   const hiburan = data?.hiburan || "Seni Reog Vikar Group";
@@ -580,7 +553,7 @@ export default function UndanganClient({
   };
 
   const getWaConfirmTransferUrl = () => {
-    if (!selected) return "https://api.whatsapp.com/send?phone=628976632321";
+    if (!selected) return `https://api.whatsapp.com/send?phone=${noWaPhone}`;
     const cleanLabelAcara = labelAcara.replace(/:/g, "").trim();
     const bankName = selected.type === "bank" ? `Bank ${selected.label}` : selected.label;
     const pengirim = guest && guest !== "[Nama Tamu]" ? guest : "Tamu Undangan";
@@ -590,7 +563,7 @@ export default function UndanganClient({
       `👤 *Nama Pengirim:* ${pengirim}\n` +
       `💳 *Tujuan Transfer:* ${bankName} (a.n. ${selected.name})\n\n` +
       `Berikut bukti transfer terlampir. Terima kasih.`;
-    return `https://api.whatsapp.com/send?phone=628976632321&text=${encodeURIComponent(msg)}`;
+    return `https://api.whatsapp.com/send?phone=${noWaPhone}&text=${encodeURIComponent(msg)}`;
   };
 
   const turutMengundangList = useMemo(() => {

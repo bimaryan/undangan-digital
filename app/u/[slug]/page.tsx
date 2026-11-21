@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getUndanganBySlug } from "@/lib/undangan";
-import UndanganClient from "./UndanganClient";
+import UndanganClient from "@/components/undangan/UndanganClient";
 
 export async function generateMetadata({
   params,

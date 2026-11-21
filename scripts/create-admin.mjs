@@ -122,16 +122,25 @@ async function main() {
   await client.connect();
 
   try {
+    const hash = hashPassword(password);
     const result = await client.query(
-      `INSERT INTO admin_users (email, password_hash)
-       VALUES ($1, $2)
-       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
+      `INSERT INTO users (email, password_hash, role, name)
+       VALUES ($1, $2, 'admin', 'Administrator')
+       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, role = 'admin'
        RETURNING email`,
-      [email, hashPassword(password)]
+      [email, hash]
     );
 
+    // Kompatibilitas mundur dengan tabel admin_users jika ada
+    await client.query(
+      `INSERT INTO admin_users (email, password_hash)
+       VALUES ($1, $2)
+       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
+      [email, hash]
+    ).catch(() => {});
+
     console.log(`\nAkun admin siap: ${result.rows[0].email}`);
-    console.log("Login di /admin/login. Jangan simpan password di dalam kode atau repository.");
+    console.log("Login di /login. Jangan simpan password di dalam kode atau repository.");
   } finally {
     await client.end();
   }

@@ -1,18 +1,7 @@
 import pool from "./db";
+import type { UploadedMedia, UploadedMediaReference } from "@/types/media";
 
-export type UploadedMedia = {
-  id: string;
-  undangan_id: number;
-  filename: string;
-  content_type: string;
-  size: number;
-  content: Buffer;
-};
-
-export type UploadedMediaReference = Pick<
-  UploadedMedia,
-  "id" | "filename" | "content_type" | "size"
->;
+export type { UploadedMedia, UploadedMediaReference };
 
 let tableReady: Promise<void> | undefined;
 

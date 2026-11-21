@@ -2,14 +2,13 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import type { Metadata } from "next";
 import { getAdminSession } from "@/lib/auth";
-import AdminEditor from "./AdminEditor";
+import AdminPanel from "@/components/admin/AdminPanel";
 
 export const metadata: Metadata = {
-  title: "Editor Undangan",
+  title: "Admin Panel — InovaInvite",
   robots: { index: false, follow: false },
 };
 
-// Halaman ini membaca cookie sesi dan wajib dirender saat request.
 export const instant = false;
 
 export default async function AdminPage() {
@@ -18,6 +17,5 @@ export default async function AdminPage() {
   if (!session) {
     redirect("/admin/login");
   }
-
-  return <AdminEditor adminEmail={session.sub} />;
+  return <AdminPanel adminEmail={session.sub} />;
 }

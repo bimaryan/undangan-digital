@@ -2,45 +2,7 @@
 
 import React, { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-// ==========================================
-// TIPE DATA
-// ==========================================
-type Undangan = {
-  id: number;
-  slug: string;
-  nama_anak: string;
-  nama_orang_tua: string;
-  tanggal: string;
-  jam: string;
-  lokasi: string;
-  akses_token?: string;
-  orang_berbahagia?: Array<{ nama: string; keterangan?: string }> | string;
-  data_json?: {
-    label_acara?: string;
-    tanggal_acara?: string;
-    jam_acara?: string;
-    sekeluarga?: string;
-    alamat_keluarga?: string;
-  };
-};
-
-type Tamu = {
-  id: number;
-  nama: string;
-  hadir?: boolean | null;
-  ucapan?: string | null;
-  rsvp_at?: string | null;
-  created_at?: string;
-};
-
-type Rsvp = {
-  id: number;
-  nama: string;
-  hadir: boolean;
-  ucapan: string;
-  created_at: string;
-};
+import type { UndanganKelola as Undangan, Tamu, Rsvp } from "@/types";
 
 // ==========================================
 // SVG ICONS (PROFESSIONAL & CLEAN)
@@ -202,12 +164,23 @@ function IconSparkles({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+export type KelolaProps = {
+  initialSlug?: string;
+  access?: "admin" | "tenant" | "host";
+  embedded?: boolean;
+};
+
 // ==========================================
 // KOMPONEN UTAMA
 // ==========================================
-function KelolaContent() {
+function KelolaContent({
+  initialSlug,
+  access,
+  embedded = false,
+}: KelolaProps = {}) {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
+  const slug = initialSlug || params?.slug || "";
 
   const [undangan, setUndangan] = useState<Undangan | null>(null);
   const [tamu, setTamu] = useState<Tamu[]>([]);
@@ -220,7 +193,13 @@ function KelolaContent() {
     setLoggingOut(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.replace(`/admin/u/${params.slug}/akses`);
+      const tujuan =
+        access === "admin"
+          ? "/admin"
+          : access === "tenant"
+          ? "/dashboard"
+          : `/dashboard/tamu?slug=${slug}`;
+      router.replace(tujuan);
       router.refresh();
     } finally {
       setLoggingOut(false);
@@ -259,7 +238,7 @@ function KelolaContent() {
     setSentMap((prev) => {
       const updated = { ...prev, [tamuId]: !prev[tamuId] };
       try {
-        localStorage.setItem(`undangan_sent_${params.slug}`, JSON.stringify(updated));
+        localStorage.setItem(`undangan_sent_${slug}`, JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -269,7 +248,7 @@ function KelolaContent() {
     setSentMap((prev) => {
       const updated = { ...prev, [tamuId]: true };
       try {
-        localStorage.setItem(`undangan_sent_${params.slug}`, JSON.stringify(updated));
+        localStorage.setItem(`undangan_sent_${slug}`, JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -277,9 +256,9 @@ function KelolaContent() {
 
   // Muat data undangan, tamu, dan RSVP
   const muat = async () => {
-    if (!params.slug) return;
+    if (!slug) return;
     try {
-      const res = await fetch(`/api/admin/u/${params.slug}`);
+      const res = await fetch(`/api/admin/u/${slug}`);
       if (!res.ok) {
         setError(
           "Sesi akses tidak valid atau halaman undangan tidak ditemukan. Buka kembali tautan akses dari admin."
@@ -299,9 +278,9 @@ function KelolaContent() {
   useEffect(() => {
     let mounted = true;
     const muatAwal = async () => {
-      if (!params.slug) return;
+      if (!slug) return;
       try {
-        const res = await fetch(`/api/admin/u/${params.slug}`);
+        const res = await fetch(`/api/admin/u/${slug}`);
         if (!mounted) return;
         if (!res.ok) {
           setError(
@@ -318,7 +297,7 @@ function KelolaContent() {
         setError("");
         setLoading(false);
         try {
-          const saved = localStorage.getItem(`undangan_sent_${params.slug}`);
+          const saved = localStorage.getItem(`undangan_sent_${slug}`);
           if (saved) setSentMap(JSON.parse(saved));
         } catch {}
       } catch (err) {
@@ -331,16 +310,16 @@ function KelolaContent() {
     return () => {
       mounted = false;
     };
-  }, [params.slug]);
+  }, [slug]);
 
   // Tambah 1 Tamu Baru
   const tambahSatu = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!namaTamuBaru.trim() || !params.slug) return;
+    if (!namaTamuBaru.trim() || !slug) return;
 
     setProsesTambah(true);
     try {
-      const res = await fetch(`/api/admin/u/${params.slug}`, {
+      const res = await fetch(`/api/admin/u/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nama: namaTamuBaru.trim() }),
@@ -356,7 +335,7 @@ function KelolaContent() {
 
   // Tambah Banyak Tamu Sekaligus (Bulk Import)
   const tambahBanyak = async () => {
-    if (!inputBanyakTamu.trim() || !params.slug) return;
+    if (!inputBanyakTamu.trim() || !slug) return;
     const baris = inputBanyakTamu
       .split("\n")
       .map((b) => b.trim())
@@ -366,7 +345,7 @@ function KelolaContent() {
 
     setProsesTambah(true);
     try {
-      const res = await fetch(`/api/admin/u/${params.slug}`, {
+      const res = await fetch(`/api/admin/u/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ daftar_nama: baris }),
@@ -383,9 +362,9 @@ function KelolaContent() {
 
   // Simpan perubahan nama tamu & kehadiran (Edit)
   const simpanEditNama = async () => {
-    if (!editingTamu || !editNama.trim() || !params.slug) return;
+    if (!editingTamu || !editNama.trim() || !slug) return;
     try {
-      const res = await fetch(`/api/admin/u/${params.slug}`, {
+      const res = await fetch(`/api/admin/u/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -405,7 +384,7 @@ function KelolaContent() {
   // Hapus tamu
   const hapus = async (id: number, nama: string) => {
     if (!confirm(`Hapus tamu "${nama}" dari daftar undangan?`)) return;
-    await fetch(`/api/admin/u/${params.slug}?tamuId=${id}`, {
+    await fetch(`/api/admin/u/${slug}?tamuId=${id}`, {
       method: "DELETE",
     });
     muat();
@@ -414,7 +393,7 @@ function KelolaContent() {
   // Hapus RSVP (jika spam)
   const hapusRsvp = async (id: number) => {
     if (!confirm("Hapus pesan ucapan/konfirmasi kehadiran ini?")) return;
-    await fetch(`/api/admin/u/${params.slug}?rsvpId=${id}`, {
+    await fetch(`/api/admin/u/${slug}?rsvpId=${id}`, {
       method: "DELETE",
     });
     muat();
@@ -429,7 +408,7 @@ function KelolaContent() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
     const tidParam = tamuId ? `&tid=${tamuId}` : "";
-    return `${origin}/u/${params.slug}/${namaSlug || "tamu"}?to=${encodeURIComponent(tamuNama)}${tidParam}`;
+    return `${origin}/u/${slug}/${namaSlug || "tamu"}?to=${encodeURIComponent(tamuNama)}${tidParam}`;
   };
 
   // Generator Teks Pesan WhatsApp Siap Kirim
@@ -545,6 +524,15 @@ function KelolaContent() {
   const belumKonfirmasiCount = tamu.filter((t) => t.hadir !== true && t.hadir !== false).length;
 
   if (loading) {
+    if (embedded) {
+      return (
+        <div className="flex flex-col items-center justify-center p-12 text-center">
+          <div className="w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <h2 className="font-semibold text-slate-800 text-sm">Memuat Data Tamu &amp; RSVP...</h2>
+          <p className="text-xs text-slate-400 mt-1">Menyiapkan daftar tamu &amp; konfirmasi kehadiran</p>
+        </div>
+      );
+    }
     return (
       <main className="min-h-screen bg-slate-900/5 flex items-center justify-center p-6">
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center max-w-sm w-full">
@@ -557,6 +545,25 @@ function KelolaContent() {
   }
 
   if (error || !undangan) {
+    if (embedded) {
+      return (
+        <div className="rounded-3xl border border-rose-200 bg-rose-50/50 p-8 text-center">
+          <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-rose-200 shadow-xs">
+            <IconShieldLock className="w-6 h-6" />
+          </div>
+          <h2 className="font-bold text-slate-900 text-base">Gagal Memuat Data Tamu</h2>
+          <p className="text-xs text-slate-600 mt-1.5 leading-relaxed max-w-md mx-auto">
+            {error || "Data undangan tidak ditemukan atau sesi akses belum siap."}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-xs transition shadow-sm"
+          >
+            Muat Ulang
+          </button>
+        </div>
+      );
+    }
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 text-center max-w-md w-full">
@@ -565,11 +572,11 @@ function KelolaContent() {
           </div>
           <h2 className="font-bold text-slate-900 text-xl tracking-tight">Akses Tidak Diizinkan</h2>
           <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-            {error || "Sesi akses tidak valid. Silakan buka tautan akses dari admin."}
+            {error || "Sesi akses tidak valid. Silakan kelola tamu melalui halaman dashboard."}
           </p>
           <div className="mt-5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-mono text-slate-700 text-left">
             <span className="text-slate-400 block mb-1">Halaman akses tuan rumah:</span>
-            <span className="text-sky-700 font-bold break-all">/admin/u/{params.slug}/akses</span>
+            <span className="text-sky-700 font-bold break-all">/dashboard/tamu?slug={slug}</span>
           </div>
           <button
             onClick={() => window.location.reload()}
@@ -582,90 +589,152 @@ function KelolaContent() {
     );
   }
 
-  return (
-    <main className="min-h-screen bg-stone-50 text-slate-800 p-3 sm:p-4 lg:p-5 font-sans antialiased">
-      <div className="mx-auto grid max-w-[1440px] gap-4 lg:gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-xl border border-slate-200 bg-white p-4 text-slate-600 lg:flex">
-          <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="mb-8 flex items-center gap-3 px-2">
-            <span className="flex size-8 items-center justify-center rounded-md bg-slate-900 text-sm font-bold text-white">I</span>
-            <span>
-              <strong className="block text-sm text-slate-900">InovaInvite</strong>
-              <span className="text-[11px] text-slate-500">Panel tuan rumah</span>
+  const content = (
+    <div className="min-w-0 space-y-4">
+      {/* 1. HEADER UTAMA */}
+      {embedded ? (
+        // Di dashboard tenant: header ringkas, mengikuti gaya kartu halaman editor.
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 text-white shadow-sm">
+              <IconUsers className="w-5 h-5" />
             </span>
-          </a>
-
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="truncate text-sm font-semibold text-slate-900">{undangan.nama_anak}</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{undangan.nama_orang_tua}</p>
-          </div>
-
-          <p className="mt-7 px-3 text-[11px] font-semibold text-slate-400">MENU UTAMA</p>
-          <nav className="mt-3 space-y-1 text-sm">
-            <a href="#ringkasan" className="flex items-center gap-3 rounded-md px-3 py-2.5 font-medium transition hover:bg-slate-100 hover:text-slate-900"><IconSparkles className="w-4 h-4" />Ringkasan</a>
-            <button type="button" onClick={() => setActiveTab("tamu")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition ${activeTab === "tamu" ? "bg-slate-100 font-semibold text-slate-900" : "font-medium hover:bg-slate-100 hover:text-slate-900"}`}><IconUsers className="w-4 h-4" />Daftar tamu <span className="ml-auto text-[11px] tabular-nums text-slate-400">{tamu.length}</span></button>
-            <button type="button" onClick={() => setActiveTab("rsvp")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition ${activeTab === "rsvp" ? "bg-slate-100 font-semibold text-slate-900" : "font-medium hover:bg-slate-100 hover:text-slate-900"}`}><IconMessageSquare className="w-4 h-4" />Buku ucapan <span className="ml-auto text-[11px] tabular-nums text-slate-400">{rsvpList.length}</span></button>
-          </nav>
-
-          <div className="mt-auto space-y-2 border-t border-slate-200 pt-4">
-            <button type="button" onClick={muat} className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-3 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"><IconRefresh className="w-4 h-4" />Segarkan data</button>
-            <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-700"><IconExternalLink className="w-4 h-4" />Lihat undangan</a>
-          </div>
-        </aside>
-
-        <div className="min-w-0 space-y-4">
-
-        {/* 1. HEADER UTAMA (ELEGANT GLASS CARD) */}
-        <div className="sticky top-3 z-30 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-slate-500">PANEL TUAN RUMAH</span>
-                <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-mono bg-slate-100/80 px-2.5 py-0.5 rounded-lg border border-slate-200/60">
-                  <span className="text-slate-400">Akses:</span>
-                  <strong className="text-slate-700 font-semibold">Tuan rumah</strong>
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Pengelolaan Tamu Undangan
-              </h1>
-              <p className="text-sm text-slate-500 flex items-center gap-1.5 flex-wrap">
-                <span>Syukuran Khitanan</span>
-                <strong className="text-slate-800 font-semibold">{undangan.nama_anak}</strong>
-                <span className="text-slate-300">•</span>
-                <span className="text-slate-600">{undangan.nama_orang_tua}</span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-sky-600">
+                Manajemen Tamu
+              </p>
+              <h2 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+                Daftar Tamu &amp; Konfirmasi RSVP
+              </h2>
+              <p className="truncate text-xs text-slate-500">
+                {undangan.nama_anak}
+                <span className="px-1.5 text-slate-300">·</span>
+                {undangan.nama_orang_tua}
               </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <a
-                href={`/u/${undangan.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full md:w-auto inline-flex items-center justify-center gap-2 text-sm bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 rounded-2xl font-semibold shadow-xs hover:shadow transition-all duration-150"
-              >
-                <span>Lihat Undangan</span>
-                <IconExternalLink className="w-4 h-4 opacity-80" />
-              </a>
-              <button
-                type="button"
-                onClick={keluar}
-                disabled={loggingOut}
-                className="w-full md:w-auto inline-flex items-center justify-center gap-2 text-sm border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-4 py-3 rounded-2xl font-semibold transition disabled:opacity-60"
-              >
-                {loggingOut ? "Keluar..." : "Keluar"}
-              </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={muat}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 sm:flex-none"
+            >
+              <IconRefresh className="w-3.5 h-3.5" />
+              <span>Segarkan</span>
+            </button>
+            <a
+              href={`/u/${undangan.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 sm:flex-none"
+            >
+              <span>Lihat Undangan</span>
+              <IconExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+          </div>
+        </div>
+      ) : (
+      <div className="sticky top-3 z-30 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-sky-600 uppercase tracking-wider">
+                PANEL TUAN RUMAH
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-mono bg-slate-100/80 px-2.5 py-0.5 rounded-lg border border-slate-200/60">
+                <span className="text-slate-400">Akses:</span>
+                <strong className="text-slate-700 font-semibold">
+                  {access === "tenant" ? "Client / Pemilik" : access === "admin" ? "Super Admin" : "Tuan rumah"}
+                </strong>
+              </span>
             </div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Pengelolaan Tamu &amp; Konfirmasi RSVP
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5 flex-wrap">
+              <span>Syukuran</span>
+              <strong className="text-slate-800 font-semibold">{undangan.nama_anak}</strong>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-600">{undangan.nama_orang_tua}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full md:w-auto">
+            <button
+              type="button"
+              onClick={muat}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+            >
+              <IconRefresh className="w-3.5 h-3.5" />
+              <span>Segarkan</span>
+            </button>
+            <a
+              href={`/u/${undangan.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 text-xs font-bold shadow-2xs transition"
+            >
+              <span>Lihat Undangan</span>
+              <IconExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+            <button
+              type="button"
+              onClick={keluar}
+              disabled={loggingOut}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-3.5 py-2.5 text-xs font-semibold transition disabled:opacity-60"
+            >
+              {loggingOut ? "Keluar..." : "Keluar"}
+            </button>
           </div>
         </div>
 
+        {/* Tab switcher: Tamu vs RSVP */}
+        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("tamu")}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition ${
+              activeTab === "tamu"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <IconUsers className="w-4 h-4" />
+            <span>Daftar Tamu</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeTab === "tamu" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+              {tamu.length}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("rsvp")}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition ${
+              activeTab === "rsvp"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <IconMessageSquare className="w-4 h-4" />
+            <span>Buku Ucapan &amp; Doa</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeTab === "rsvp" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+              {rsvpList.length}
+            </span>
+          </button>
+        </div>
+      </div>
+      )}
+
+      {!embedded && (
         <nav aria-label="Navigasi panel tuan rumah" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:hidden">
           <a href="#ringkasan" className="whitespace-nowrap rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-800">Ringkasan</a>
           <button type="button" onClick={() => setActiveTab("tamu")} className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold ${activeTab === "tamu" ? "bg-sky-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}>Daftar tamu</button>
           <button type="button" onClick={() => setActiveTab("rsvp")} className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold ${activeTab === "rsvp" ? "bg-sky-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}>Buku ucapan</button>
           <button type="button" onClick={muat} className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">Segarkan</button>
         </nav>
+      )}
 
-        {/* 2. STATISTIK KARTU RINGKASAN (MODERN METRIC TILES) */}
+      {/* 2. STATISTIK KARTU RINGKASAN (MODERN METRIC TILES) */}
         <div id="ringkasan" className="scroll-mt-32 grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Total Tamu */}
           <div className="bg-white p-4 rounded-lg border border-slate-200/80 shadow-xs hover:border-slate-300 transition">
@@ -1426,23 +1495,62 @@ function KelolaContent() {
             </div>
           </div>
         )}
+      </div>
+    );
 
-        </div>
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <main className="min-h-screen bg-stone-50 text-slate-800 p-3 sm:p-4 lg:p-5 font-sans antialiased">
+      <div className="mx-auto grid max-w-[1440px] gap-4 lg:gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] flex-col rounded-xl border border-slate-200 bg-white p-4 text-slate-600 lg:flex">
+          <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="mb-8 flex items-center gap-3 px-2">
+            <span className="flex size-8 items-center justify-center rounded-md bg-slate-900 text-sm font-bold text-white">I</span>
+            <span>
+              <strong className="block text-sm text-slate-900">InovaInvite</strong>
+              <span className="text-[11px] text-slate-500">Panel tuan rumah</span>
+            </span>
+          </a>
+
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="truncate text-sm font-semibold text-slate-900">{undangan.nama_anak}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{undangan.nama_orang_tua}</p>
+          </div>
+
+          <p className="mt-7 px-3 text-[11px] font-semibold text-slate-400">MENU UTAMA</p>
+          <nav className="mt-3 space-y-1 text-sm">
+            <a href="#ringkasan" className="flex items-center gap-3 rounded-md px-3 py-2.5 font-medium transition hover:bg-slate-100 hover:text-slate-900"><IconSparkles className="w-4 h-4" />Ringkasan</a>
+            <button type="button" onClick={() => setActiveTab("tamu")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition ${activeTab === "tamu" ? "bg-slate-100 font-semibold text-slate-900" : "font-medium hover:bg-slate-100 hover:text-slate-900"}`}><IconUsers className="w-4 h-4" />Daftar tamu <span className="ml-auto text-[11px] tabular-nums text-slate-400">{tamu.length}</span></button>
+            <button type="button" onClick={() => setActiveTab("rsvp")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition ${activeTab === "rsvp" ? "bg-slate-100 font-semibold text-slate-900" : "font-medium hover:bg-slate-100 hover:text-slate-900"}`}><IconMessageSquare className="w-4 h-4" />Buku ucapan <span className="ml-auto text-[11px] tabular-nums text-slate-400">{rsvpList.length}</span></button>
+          </nav>
+
+          <div className="mt-auto space-y-2 border-t border-slate-200 pt-4">
+            <button type="button" onClick={muat} className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 px-3 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"><IconRefresh className="w-4 h-4" />Segarkan data</button>
+            <a href={`/u/${undangan.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-700"><IconExternalLink className="w-4 h-4" />Lihat undangan</a>
+          </div>
+        </aside>
+        {content}
       </div>
     </main>
   );
 }
 
-export default function KelolaPage() {
+export default function KelolaPage({
+  initialSlug,
+  access,
+  embedded = false,
+}: KelolaProps = {}) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-sm text-slate-500 font-sans">
-          Memuat Panel Tuan Rumah...
+        <div className={embedded ? "p-8 text-center text-sm text-slate-500 font-sans" : "min-h-screen bg-slate-50 flex items-center justify-center p-6 text-sm text-slate-500 font-sans"}>
+          Memuat Panel Tamu &amp; RSVP...
         </div>
       }
     >
-      <KelolaContent />
+      <KelolaContent initialSlug={initialSlug} access={access} embedded={embedded} />
     </Suspense>
   );
 }

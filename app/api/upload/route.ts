@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { saveUploadedMedia } from "@/lib/media";
 import { attachUploadedMedia, getUndanganBySlug } from "@/lib/undangan";
-import { getAdminSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/auth";
 import { isSameOrigin } from "@/lib/session";
 
 const FILE_TYPES = {
@@ -25,12 +25,18 @@ function getExtension(filename: string) {
 async function canUpload(slug: string) {
   if (!slug) return null;
 
-  // Upload hanya untuk admin yang sudah login. Tuan rumah tidak boleh
-  // mengubah foto/musik undangan.
-  const admin = await getAdminSession();
-  if (!admin) return null;
+  const user = await getUserSession();
+  if (!user) return null;
 
-  return (await getUndanganBySlug(slug)) ?? null;
+  const undangan = await getUndanganBySlug(slug);
+  if (!undangan) return null;
+
+  if (user.role === "admin") return undangan;
+  if (user.role === "tenant" && undangan.user_id === user.userId) {
+    return undangan;
+  }
+
+  return null;
 }
 
 export async function POST(req: NextRequest) {
